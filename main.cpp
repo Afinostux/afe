@@ -46,8 +46,7 @@ int main (const int argc, const char ** argv)
 	}
 
 
-	SDL_GLContext con = SDL_GL_CreateContext(window);
-	afLoadGL();
+	afInitGL(window);
 
 	GLuint
 		vertShader = afLoadShader("basic.vert"),
@@ -137,7 +136,7 @@ int main (const int argc, const char ** argv)
 	if (vbuffer)
 		glDeleteBuffers(1,&vbuffer);
 
-	SDL_GL_DeleteContext(con);
+	SDL_GL_DeleteContext(afPrimaryGlContext);
 	SDL_DestroyWindow(window);
 
 	SDL_Quit();

@@ -1,8 +1,10 @@
 
 #include "af_gl.hpp"
-#include "include/SDL_video.h"
 #include "include/SDL_rwops.h"
 
+SDL_GLContext afPrimaryGlContext = 0;
+
+static bool afGLIsInit = false;
 
 //vbo
 glGenBuffersFunc		glGenBuffers=0;
@@ -31,8 +33,19 @@ glIsProgramFunc			glIsProgram=0;
 glGetProgramInfoLogFunc		glGetProgramInfoLog=0;
 glDeleteProgramFunc		glDeleteProgram=0;
 
+bool afInitGL(SDL_Window * window)
+{
+	afPrimaryGlContext = SDL_GL_CreateContext(window);
+	afLoadGL();
+
+	glEnable(GL_DEPTH_TEST);
+	return 0;
+}
+
 void afLoadGL()
 {
+	if (afGLIsInit) return;
+	afGLIsInit = true;
 	//glggg = (glgggFunc)SDL_GL_GetProcAddress("glggg");
 	
 	//	VBO
