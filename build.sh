@@ -34,6 +34,6 @@ done
 for d in $LIBDIRS; do flags="$flags -L$d"; done
 for l in $LIBS; do flags="$flags -l$l"; done
 
-echo clang $flags $OBJECTS -o space
-clang $flags $OBJECTS -o space
+echo clang $flags $OBJECTS -o space.out
+clang $flags $OBJECTS -o space.out
 rm $OBJECTS
