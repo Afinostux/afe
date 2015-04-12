@@ -44,7 +44,8 @@ void afAudioCallback(void *udata, Uint8 *stream, int len)
 		{
 			//FAB[phase] = (((piphase/100)%2 == 0)?1:-1) * volume;
 			FAB[phase] = (float)sin(sinecontinue) * volume;
-			sinecontinue += kpms/1000.f;
+			//sinecontinue += kpms/1000.f;
+			sinecontinue += (sin(kpms/40.f)+1)/40.f + 0.04;
 			while (sinecontinue > TAU) sinecontinue -= TAU;
 		}
 	}
