@@ -5,8 +5,6 @@
 
 typedef unsigned int uint;
 
-
-
 bool running = true;
 
 int main (const int argc, const char ** argv)
@@ -42,7 +40,6 @@ int main (const int argc, const char ** argv)
 	SDL_Event event;
 	
 	glClearColor(0,0,0,1);
-	glColor3f(1.f,1.f,1.f);
 
 	GLuint vbuffer=0;
 	glGenBuffers(1,&vbuffer);
@@ -73,11 +70,15 @@ int main (const int argc, const char ** argv)
 			}
 		}
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glUseProgram(shaderProgram);
+
 		glBindBuffer(GL_ARRAY_BUFFER, vbuffer);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDisableClientState(GL_VERTEX_ARRAY);
+
 		SDL_GL_SwapWindow(window);
 		
 		SDL_Delay(10);

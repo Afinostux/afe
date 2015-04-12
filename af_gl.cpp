@@ -51,6 +51,7 @@ void loadGL()
 	glAttachShader = (glAttachShaderFunc)SDL_GL_GetProcAddress("glAttachShader");
 	glLinkProgram = (glLinkProgramFunc)SDL_GL_GetProcAddress("glLinkProgram");
 	glGetProgramiv = (glGetProgramivFunc)SDL_GL_GetProcAddress("glGetProgramiv");
+	glUseProgram = (glUseProgramFunc)SDL_GL_GetProcAddress("glUseProgram");
 	glIsProgram = (glIsProgramFunc)SDL_GL_GetProcAddress("glIsProgram");
 	glGetProgramInfoLog = (glGetProgramInfoLogFunc)SDL_GL_GetProcAddress("glGetProgramInfoLog");
 	glDeleteProgram = (glDeleteProgramFunc)SDL_GL_GetProcAddress("glDeleteProgram");

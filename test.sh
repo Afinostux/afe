@@ -1,2 +1,2 @@
 ./build.sh
-./space
+./space.out
