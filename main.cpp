@@ -7,6 +7,73 @@ typedef unsigned int uint;
 
 bool running = true;
 
+typedef struct afeKey {
+	bool pressed, released;
+	uint pressedms, releasedms;
+	SDL_Keycode key;
+
+	afeKey() : 
+		pressed(false), released(false),
+		pressedms(0), releasedms(0), key(0)
+	{}
+
+	afeKey(SDL_Keycode k) : 
+		pressed(false), released(false),
+		pressedms(0), releasedms(0), key(k)
+	{}
+
+	void handle(SDL_KeyboardEvent * kev){
+		if ((kev->keysym.sym) == (key) && !kev->repeat) {
+			switch (kev->state) {
+				case (SDL_PRESSED):
+					pressed = true;
+					released = false;
+					pressedms = 0;
+					break;
+				case (SDL_RELEASED):
+					pressed = false;
+					released = true;
+					releasedms = 0;
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
+	void tick(uint ms){
+		if (pressed) pressedms += ms;
+		if (released) releasedms += ms;
+	}
+} afeKey;
+
+const uint max_keys = 32;
+uint key_count = 0;
+afeKey afkeys[max_keys];
+
+afeKey* getKey(SDL_Keycode code){
+	uint kc;
+	for (kc = key_count; kc--;)
+	{
+		if (afkeys[kc].key == code) return &afkeys[kc];
+	}
+	if (key_count == max_keys) return 0;
+	afkeys[key_count] = afeKey(code);
+	return &afkeys[key_count++];
+}
+void handleKeys(SDL_KeyboardEvent * kev){
+	for (uint kc = key_count; kc--;)
+	{
+		afkeys[kc].handle(kev);
+	}
+}
+void tickKeys(uint ms){
+	for (uint kc = key_count; kc--;)
+	{
+		afkeys[kc].tick(ms);
+	}
+}
+
 int main (const int argc, const char ** argv)
 {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -72,14 +139,28 @@ int main (const int argc, const char ** argv)
 		running = false;
 	}
 
+	afeKey *gkey = getKey(SDLK_g);
+
+	uint last_tick, current_tick = SDL_GetTicks();
+
 	while (running) {
+		last_tick = current_tick;
+		current_tick = SDL_GetTicks();
+		tickKeys(current_tick - last_tick);
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
 			{
-				case SDL_QUIT: {running = false;}
+				case SDL_QUIT: {running = false;} break;
+				case SDL_KEYDOWN:
+				case SDL_KEYUP: {
+							handleKeys(&event.key);
+						}
+					       
+
 			}
 		}
+		if (gkey->pressedms > 1000) running = false;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
