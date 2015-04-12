@@ -1,17 +1,70 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
+#include <SDL_audio.h>
 #include "af_gl.hpp"
 #include "af_keys.h"
 
 typedef unsigned int uint;
 
 bool running = true;
+bool donoise = false;
+SDL_AudioDeviceID adevice = 0;
+float volume = 0.1;
+
+int piphase = 0;
+
+const uint audio_hz = 48000;
+
+
+void afAudioCallback(void *udata, Uint8 *stream, int len)
+{
+	static uint
+		currentAudio = SDL_GetTicks(),
+		prevAudio = currentAudio;
+
+	SDL_memset(stream, 0, len);
+	float *FAB = (float*)stream;
+	const int FABsize = len/sizeof(float);
+
+	if (donoise) {
+		for (int phase = 0; phase < FABsize; phase++)
+		{
+			FAB[phase] = (((piphase/100)%2 == 0)?1:-1) * volume;
+			piphase++;
+		}
+	}
+
+	prevAudio = currentAudio;
+	currentAudio = SDL_GetTicks();
+}
 
 
 int main (const int argc, const char ** argv)
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+//
+//
+//
+
+	SDL_AudioSpec want, have;
+	SDL_zero(want);
+	want.freq = audio_hz;
+	want.format = AUDIO_F32;
+	want.channels = 1;
+	want.samples = 1024;
+	want.callback = afAudioCallback;
+
+	adevice = SDL_OpenAudioDevice(
+			NULL, 0,
+			&want, &have,
+			SDL_AUDIO_ALLOW_ANY_CHANGE);
+	
+	SDL_PauseAudioDevice(adevice, 0);
+	
+//
+//
+//
 
 	SDL_Window *window;
 
@@ -75,6 +128,7 @@ int main (const int argc, const char ** argv)
 	}
 
 	afeKey *gkey = getKey(SDLK_g);
+	afeKey *noise = getKey(SDLK_n);
 
 	uint last_tick, current_tick = SDL_GetTicks();
 
@@ -96,6 +150,7 @@ int main (const int argc, const char ** argv)
 			}
 		}
 		if (gkey->pressedms > 1000) running = false;
+		donoise = noise->pressed;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
@@ -114,7 +169,7 @@ int main (const int argc, const char ** argv)
 
 		SDL_GL_SwapWindow(window);
 		
-		SDL_Delay(10);
+		SDL_Delay(16);
 	};
 
 	if (vbuffer)
