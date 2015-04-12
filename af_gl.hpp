@@ -2,8 +2,9 @@
 #pragma once
 
 #include <GL/gl.h>
+#include "include/SDL_video.h"
 
-enum shaderTypes{
+enum afShaderTypes{
 	FAIL_SHADER=0,
 	VERTEX_SHADER=GL_VERTEX_SHADER, FRAGMENT_SHADER=GL_FRAGMENT_SHADER
 };
@@ -120,8 +121,9 @@ extern glDeleteProgramFunc glDeleteProgram;
 //typedef void (APIENTRY * glgggFunc)(args);
 //extern glgggFunc glggg;
 
-void loadGL(void);
-GLuint getShaderTypeByExtension(const char *fname);
-GLuint loadShader(const char *fname);
-GLuint makeGLProgram(GLuint vs, GLuint ps);
-void debugShaderObject(GLuint oid);
+bool afInitGL(SDL_Window * window);
+void afLoadGL(void);
+GLuint afGetShaderTypeByExtension(const char *fname);
+GLuint afLoadShader(const char *fname);
+GLuint afMakeGLProgram(GLuint vs, GLuint ps);
+void afDebugShaderObject(GLuint oid);

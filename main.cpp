@@ -1,82 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL.h>
-#include <SDL_audio.h>
+#include "include/SDL.h"
+#include "include/SDL_audio.h"
 #include "af_gl.hpp"
-#include "af_keys.h"
+#include "af_keys.hpp"
+#include "af_audio.hpp"
 
 #define TAU 6.283185307
 typedef unsigned int uint;
 
 bool running = true;
-bool donoise = false;
-afeKey *noisekey = 0;
-SDL_AudioDeviceID adevice = 0;
-float volume = 0.1;
-float kpms = 0;
-
-
-const uint audio_hz = 48000;
-float sinecontinue = 0;
-
-void afAudioCallback(void *udata, Uint8 *stream, int len)
-{
-	static uint
-		currentAudio = SDL_GetTicks(),
-		prevAudio = currentAudio;
-
-	SDL_memset(stream, 0, len);
-	float *FAB = (float*)stream;
-	const int FABsize = len/sizeof(float);
-
-
-	if (noisekey && noisekey->pressed) {	
-		if (noisekey->pressedms < 100)
-		{
-			kpms = 0;
-		}
-		else
-		{
-			kpms += 1.f;
-		}
-
-		for (int phase = 0; phase < FABsize; phase++)
-		{
-			//FAB[phase] = (((piphase/100)%2 == 0)?1:-1) * volume;
-			FAB[phase] = (float)sin(sinecontinue) * volume;
-			//sinecontinue += kpms/1000.f;
-			sinecontinue += (sin(kpms/40.f)+1)/40.f + 0.04;
-			while (sinecontinue > TAU) sinecontinue -= TAU;
-		}
-	}
-
-	prevAudio = currentAudio;
-	currentAudio = SDL_GetTicks();
-}
-
 
 int main (const int argc, const char ** argv)
 {
-	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
 //
 //
 //
 
 	SDL_AudioSpec want, have;
 	SDL_zero(want);
-	want.freq = audio_hz;
+	want.freq = 48000;
 	want.format = AUDIO_F32;
 	want.channels = 1;
 	want.samples = 1024;
-	want.callback = afAudioCallback;
 
-	adevice = SDL_OpenAudioDevice(
-			NULL, 0,
-			&want, &have,
-			SDL_AUDIO_ALLOW_ANY_CHANGE);
-	
-	SDL_PauseAudioDevice(adevice, 0);
-	
+	afAudioInit(&want, &have);
 //
 //
 //
@@ -98,14 +47,14 @@ int main (const int argc, const char ** argv)
 
 
 	SDL_GLContext con = SDL_GL_CreateContext(window);
-	loadGL();
+	afLoadGL();
 
 	GLuint
-		vertShader = loadShader("basic.vert"),
-		fragShader = loadShader("basic.frag");
+		vertShader = afLoadShader("basic.vert"),
+		fragShader = afLoadShader("basic.frag");
 
 	GLuint
-		shaderProgram = makeGLProgram(vertShader, fragShader);
+		shaderProgram = afMakeGLProgram(vertShader, fragShader);
 
 	SDL_Event event;
 	
@@ -142,15 +91,14 @@ int main (const int argc, const char ** argv)
 		running = false;
 	}
 
-	afeKey *gkey = getKey(SDLK_g);
-	noisekey = getKey(SDLK_n);
+	afeKey *gkey = afGetKey(SDLK_g);
 
 	uint last_tick, current_tick = SDL_GetTicks();
 
 	while (running) {
 		last_tick = current_tick;
 		current_tick = SDL_GetTicks();
-		tickKeys(current_tick - last_tick);
+		afTickKeys(current_tick - last_tick);
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -158,7 +106,7 @@ int main (const int argc, const char ** argv)
 				case SDL_QUIT: {running = false;} break;
 				case SDL_KEYDOWN:
 				case SDL_KEYUP: {
-							handleKeys(&event.key);
+							afHandleKeys(&event.key);
 						}
 					       
 

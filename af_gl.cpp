@@ -1,7 +1,7 @@
 
 #include "af_gl.hpp"
-#include <SDL_video.h>
-#include <SDL_rwops.h>
+#include "include/SDL_video.h"
+#include "include/SDL_rwops.h"
 
 
 //vbo
@@ -31,7 +31,7 @@ glIsProgramFunc			glIsProgram=0;
 glGetProgramInfoLogFunc		glGetProgramInfoLog=0;
 glDeleteProgramFunc		glDeleteProgram=0;
 
-void loadGL()
+void afLoadGL()
 {
 	//glggg = (glgggFunc)SDL_GL_GetProcAddress("glggg");
 	
@@ -66,7 +66,7 @@ void loadGL()
 }
 
 
-GLuint getShaderTypeByExtension(const char *fname)
+GLuint afGetShaderTypeByExtension(const char *fname)
 {
 	uint result, fnameidx=0;
 	while (fname[fnameidx] != '\0') fnameidx++;
@@ -84,9 +84,9 @@ GLuint getShaderTypeByExtension(const char *fname)
 	return result;
 }
 
-GLuint loadShader(const char *fname)
+GLuint afLoadShader(const char *fname)
 {
-	uint type = getShaderTypeByExtension(fname);
+	uint type = afGetShaderTypeByExtension(fname);
 	if (!type) return 0;
 
 	GLuint result = glCreateShader(type);
@@ -113,7 +113,7 @@ GLuint loadShader(const char *fname)
 
 	if (!compile_ok) {
 		fprintf(stderr,"failed to load %s\n", fname);
-		debugShaderObject(result);
+		afDebugShaderObject(result);
 		glDeleteShader(result);
 		result = 0;
 	}
@@ -122,7 +122,7 @@ GLuint loadShader(const char *fname)
 	return result;
 }
 
-GLuint makeGLProgram(GLuint vs, GLuint ps){
+GLuint afMakeGLProgram(GLuint vs, GLuint ps){
 	if (vs == 0 || ps == 0) return 0;
 	GLuint result = glCreateProgram();
 	glAttachShader(result, vs);
@@ -135,14 +135,14 @@ GLuint makeGLProgram(GLuint vs, GLuint ps){
 	if (!compile_ok)
 	{
 		fprintf(stderr, "problem in program %u:\n", result);
-		debugShaderObject(result);
+		afDebugShaderObject(result);
 		glDeleteProgram(result);
 	}
 
 	return result;
 }
 
-void debugShaderObject(GLuint oid){
+void afDebugShaderObject(GLuint oid){
 	GLint logLength;
 	char * logGL;
 	if (glIsShader(oid)){
