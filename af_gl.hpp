@@ -60,6 +60,22 @@ extern glGetShaderInfoLogFunc glGetShaderInfoLog;
 typedef void (APIENTRY * glDeleteShaderFunc)(GLuint shader);
 extern glDeleteShaderFunc glDeleteShader;
 
+//glGetAttribLocation
+typedef GLint (APIENTRY * glGetAttribLocationFunc)(GLuint program, const GLchar *name);
+extern glGetAttribLocationFunc glGetAttribLocation;
+
+//glEnableVertexAttribArray
+typedef void (APIENTRY * glEnableVertexAttribArrayFunc)(GLuint index);
+extern glEnableVertexAttribArrayFunc glEnableVertexAttribArray;
+
+//glVertexAttribPointer
+typedef void (APIENTRY * glVertexAttribPointerFunc)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
+extern glVertexAttribPointerFunc glVertexAttribPointer;
+
+//glDisableVertexAttribArray
+typedef void (APIENTRY * glDisableVertexAttribArrayFunc)(GLuint index);
+extern glDisableVertexAttribArrayFunc glDisableVertexAttribArray;
+
 //
 //	Shader program functions
 //

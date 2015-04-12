@@ -41,13 +41,15 @@ int main (const int argc, const char ** argv)
 	
 	glClearColor(0,0,0,1);
 
-	GLuint vbuffer=0;
+	GLuint vbuffer=0, cbuffer;
+	GLint vcolorattrib;
 	glGenBuffers(1,&vbuffer);
+	glGenBuffers(1,&cbuffer);
 
 	GLfloat triangle[9] = {
 		0,	1.f,	0,
-		1.f,	-1.f,	0,
-		-1.f,	-1.f,	0,
+		0.4f,	-1.0f,	0,
+		-0.4f,	-1.0f,	0,
 	};
 
 	GLfloat colors[9] = {
@@ -56,22 +58,35 @@ int main (const int argc, const char ** argv)
 		0.f, 0.f, 1.f,
 	};
 
-	if (!vbuffer) {goto stop;}
+	if (!vbuffer || !cbuffer || !shaderProgram) {running = false;}
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*9, triangle, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, cbuffer);
+	glBufferData(GL_ARRAY_BUFFER,sizeof(GLfloat)*9, colors, GL_STATIC_DRAW);
+
+	vcolorattrib = glGetAttribLocation(shaderProgram, "v_color");
+	if (vcolorattrib == -1) {
+		fprintf(stderr, "v_color failed");
+		running = false;
+	}
 
 	while (running) {
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
 			{
-				case SDL_QUIT: {running = false; goto stop;}
+				case SDL_QUIT: {running = false;}
 			}
 		}
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
+
+		glEnableVertexAttribArray(vcolorattrib);
+		glBindBuffer(GL_ARRAY_BUFFER, cbuffer);
+		glVertexAttribPointer(vcolorattrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbuffer);
 		glEnableClientState(GL_VERTEX_ARRAY);
@@ -79,11 +94,13 @@ int main (const int argc, const char ** argv)
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDisableClientState(GL_VERTEX_ARRAY);
 
+		glDisableVertexAttribArray(vcolorattrib);
+
 		SDL_GL_SwapWindow(window);
 		
 		SDL_Delay(10);
 	};
-stop:
+
 	if (vbuffer)
 		glDeleteBuffers(1,&vbuffer);
 
