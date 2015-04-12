@@ -5,17 +5,19 @@
 #include "af_gl.hpp"
 #include "af_keys.h"
 
+#define TAU 6.283185307
 typedef unsigned int uint;
 
 bool running = true;
 bool donoise = false;
+afeKey *noisekey = 0;
 SDL_AudioDeviceID adevice = 0;
 float volume = 0.1;
+float kpms = 0;
 
-int piphase = 0;
 
 const uint audio_hz = 48000;
-
+float sinecontinue = 0;
 
 void afAudioCallback(void *udata, Uint8 *stream, int len)
 {
@@ -27,11 +29,23 @@ void afAudioCallback(void *udata, Uint8 *stream, int len)
 	float *FAB = (float*)stream;
 	const int FABsize = len/sizeof(float);
 
-	if (donoise) {
+
+	if (noisekey && noisekey->pressed) {	
+		if (noisekey->pressedms < 100)
+		{
+			kpms = 0;
+		}
+		else
+		{
+			kpms += 1.f;
+		}
+
 		for (int phase = 0; phase < FABsize; phase++)
 		{
-			FAB[phase] = (((piphase/100)%2 == 0)?1:-1) * volume;
-			piphase++;
+			//FAB[phase] = (((piphase/100)%2 == 0)?1:-1) * volume;
+			FAB[phase] = (float)sin(sinecontinue) * volume;
+			sinecontinue += kpms/1000.f;
+			while (sinecontinue > TAU) sinecontinue -= TAU;
 		}
 	}
 
@@ -128,7 +142,7 @@ int main (const int argc, const char ** argv)
 	}
 
 	afeKey *gkey = getKey(SDLK_g);
-	afeKey *noise = getKey(SDLK_n);
+	noisekey = getKey(SDLK_n);
 
 	uint last_tick, current_tick = SDL_GetTicks();
 
@@ -150,7 +164,6 @@ int main (const int argc, const char ** argv)
 			}
 		}
 		if (gkey->pressedms > 1000) running = false;
-		donoise = noise->pressed;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);

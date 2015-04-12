@@ -5,7 +5,7 @@ CSOURCES=""
 OBJECTS=""
 INCLUDEDIRS="./ include/"
 LIBDIRS="./"
-LIBS="GL GLU SDL2 SDL2main stdc++"
+LIBS="m GL GLU SDL2 SDL2main stdc++"
 flags="-g -DGLEW_STATIC"
 
 for dir in $SOURCEDIRS
