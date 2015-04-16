@@ -23,7 +23,7 @@ int main (const int argc, const char ** argv)
 	want.freq = 48000;
 	want.format = AUDIO_F32;
 	want.channels = 1;
-	want.samples = 1024;
+	want.samples = 2048;
 
 	afAudioInit(&want, &have);
 //
@@ -91,6 +91,7 @@ int main (const int argc, const char ** argv)
 	}
 
 	afeKey *gkey = afGetKey(SDLK_g);
+	afeKey *nkey = afGetKey(SDLK_n);
 
 	uint last_tick, current_tick = SDL_GetTicks();
 
@@ -98,6 +99,7 @@ int main (const int argc, const char ** argv)
 		last_tick = current_tick;
 		current_tick = SDL_GetTicks();
 		afTickKeys(current_tick - last_tick);
+		afPushAudio((current_tick - last_tick)/1000.f);
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -111,6 +113,7 @@ int main (const int argc, const char ** argv)
 
 			}
 		}
+		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0.f, 0.1f, 261.6, 0.5);
 		if (gkey->pressedms > 1000) running = false;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
