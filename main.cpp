@@ -67,7 +67,7 @@ int main (const int argc, const char ** argv)
 	GLfloat triangle[9] = {
 		0,	1.f,	0,
 		0.4f,	-1.0f,	0,
-		-0.4f,	-1.0f,	0,
+		-1.f,	-1.0f,	0,
 	};
 
 	GLfloat colors[9] = {
