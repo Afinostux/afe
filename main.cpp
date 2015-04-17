@@ -5,6 +5,7 @@
 #include "af_gl.hpp"
 #include "af_keys.hpp"
 #include "af_audio.hpp"
+#include "af_3dmath.hpp"
 
 #define TAU 6.283185307
 typedef unsigned int uint;
@@ -24,6 +25,27 @@ int main (const int argc, const char ** argv)
 	want.samples = 800;
 
 	afAudioInit(&want, &have);
+
+#if 0
+// vim macro play area
+//	1--------------0
+// w = f1jlr1k0f0jhr00
+// a = yyp:s/[10]/-/gk@w
+// s = :s/1/2:s/0/1:s/2/0
+// d = 15@a@s
+#endif
+	afMat4 junk;
+	junk.print();
+	junk.rotate(TAU/4, 0.f, 0.f);
+	junk.print();
+	junk.translate(1.f, 2.f, 3.f);
+	junk.print();
+	junk.rotate(TAU/4, 0.f, 0.f);
+	junk.print();
+	printf("%f\n",junk.determinant());
+//
+//
+//
 
 	SDL_Window *window;
 

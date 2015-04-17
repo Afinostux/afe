@@ -1,5 +1,6 @@
 
 #pragma once
+#include <stdio.h>
 #include <math.h>
 // homogeneous coordinates/vec4
 typedef struct hc4 {
@@ -54,6 +55,14 @@ typedef afVec4 afQuat;
 typedef struct mat4 {
 	float m[16];
 	static const mat4 identity;
+	mat4() : m{
+		1,	0,	0,	0,
+		0,	1,	0,	0,
+		0,	0,	1,	0,
+		0,	0,	0,	1
+		}
+	{}
+
 	mat4(const float ms[16])
 	{
 		for (int i = 16; i--;)
@@ -67,13 +76,13 @@ typedef struct mat4 {
 			float yx, float yy, float yz, float yw,
 			float zx, float zy, float zz, float zw,
 			float wx, float wy, float wz, float ww
-	     )
-	{
-		m[0]	= xx; m[1]	= xy; m[2]	= xz; m[3]	= xw;
-		m[4]	= yx; m[5]	= yy; m[6]	= yz; m[7]	= yw;
-		m[8]	= zx; m[9]	= zy; m[10]	= zz; m[11]	= zw;
-		m[12]	= wx; m[13]	= wy; m[14]	= wz; m[15]	= ww;
+	     ) : m{
+			xx, xy, xz, xw,
+			yx, yy, yz, yw,
+			zx, zy, zz, zw,
+			wx, wy, wz, ww
 	}
+	{}
 
 	mat4 getTranspose();
 	void transpose();
@@ -83,10 +92,21 @@ typedef struct mat4 {
 	void getSubmat(float s[9], int i, int j);
 	float getSubmatDet(int i, int j);
 
+	void rotate(float ex, float ey, float ez);
+	void translate(float tx, float ty, float tz);
+
 	mat4& operator=(const mat4& other);
 	mat4 operator+(const mat4& other);
 	mat4 operator-(const mat4& other);
 	mat4 operator*(const mat4& other);
+	mat4& operator*=(const mat4& other);
 	mat4 operator*(const float other);
+	float& operator[](const int other);
+	void print(void) {
+		printf("|~~~~~~(matrix)~~~~~~~~~~~~~~~~~~|\n|");
+		for (int i = 0; i < 16; i++)
+			printf("%-8.3f%s",m[i],((i+1)%4)?"":"|\n|");
+		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n");
+	}
 } afMat4;
 
