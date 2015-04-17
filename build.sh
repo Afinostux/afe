@@ -6,7 +6,7 @@ OBJECTS=""
 INCLUDEDIRS="./ include/"
 LIBDIRS="./"
 LIBS="m GL GLU SDL2 SDL2main stdc++"
-flags="-g -fdiagnostics-show-option"
+flags="-s -O2 -fdiagnostics-show-option"
 
 for dir in $SOURCEDIRS
 do 

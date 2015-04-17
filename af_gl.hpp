@@ -2,6 +2,7 @@
 #pragma once
 
 #include <GL/gl.h>
+#include <GL/glu.h>
 #include "include/SDL_video.h"
 
 enum afShaderTypes{
@@ -126,6 +127,10 @@ extern glDeleteProgramFunc glDeleteProgram;
 
 bool afInitGL(SDL_Window * window);
 void afLoadGL(void);
+void afGLStartFrame();
+void afGLSet2D();
+void afGLSet3D();
+void afGLEndFrame();
 GLuint afGetShaderTypeByExtension(const char *fname);
 GLuint afLoadShader(const char *fname);
 GLuint afMakeGLProgram(GLuint vs, GLuint ps);

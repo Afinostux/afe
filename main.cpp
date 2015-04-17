@@ -9,26 +9,21 @@
 #define TAU 6.283185307
 typedef unsigned int uint;
 
+const uint afFrameTargetMS = 30;
 bool running = true;
 
 int main (const int argc, const char ** argv)
 {
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
-//
-//
-//
 
 	SDL_AudioSpec want, have;
 	SDL_zero(want);
 	want.freq = 48000;
 	want.format = AUDIO_F32;
 	want.channels = 1;
-	want.samples = 2048;
+	want.samples = 800;
 
 	afAudioInit(&want, &have);
-//
-//
-//
 
 	SDL_Window *window;
 
@@ -94,12 +89,14 @@ int main (const int argc, const char ** argv)
 	afeKey *nkey = afGetKey(SDLK_n);
 
 	uint last_tick, current_tick = SDL_GetTicks();
+	unsigned long frame_start_perf, frame_end_perf,
+		      perf_frequency = SDL_GetPerformanceFrequency();
 
 	while (running) {
+		frame_start_perf = SDL_GetPerformanceCounter();
 		last_tick = current_tick;
 		current_tick = SDL_GetTicks();
-		afTickKeys(current_tick - last_tick);
-		afPushAudio((current_tick - last_tick)/1000.f);
+		afPushAudio(0.001*(current_tick - last_tick));
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -114,8 +111,12 @@ int main (const int argc, const char ** argv)
 			}
 		}
 		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0.f, 0.1f, 261.6, 0.5);
-		if (gkey->pressedms > 1000) running = false;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (gkey->pressedms > 300) running = false;
+
+		afGLStartFrame();
+		afGLSet3D();
+		glLoadIdentity();
+		glTranslatef(0.f, 0.f, -10.f);
 
 		glUseProgram(shaderProgram);
 
@@ -131,9 +132,33 @@ int main (const int argc, const char ** argv)
 
 		glDisableVertexAttribArray(vcolorattrib);
 
-		SDL_GL_SwapWindow(window);
-		
-		SDL_Delay(16);
+
+		afGLEndFrame();
+
+
+		frame_end_perf = SDL_GetPerformanceCounter();
+		uint frametime = (frame_end_perf - frame_start_perf) / (perf_frequency / 1000);
+
+		if (frametime < afFrameTargetMS) {
+#if 0
+			fprintf(stderr,
+				"(%u)\n",
+				frametime);
+#endif
+			while (frametime < afFrameTargetMS) {
+				frame_end_perf = SDL_GetPerformanceCounter();
+				frametime = (frame_end_perf - frame_start_perf) / (perf_frequency / 1000);
+			}
+		}
+		else
+		{//missed frame target
+#if 0
+			fprintf(stderr,
+				"missed frame target (%u, %1.1f)\n",
+				frametime, (float)frametime / afFrameTargetMS);
+#endif
+		}
+		afTickKeys(frametime);
 	};
 
 	if (vbuffer)

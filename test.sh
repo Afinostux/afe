@@ -1,2 +1,4 @@
 ./build.sh
-./space.out
+./space.out 2> errors.txt
+less errors.txt
+
