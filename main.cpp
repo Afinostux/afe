@@ -2,15 +2,14 @@
 #include <stdlib.h>
 #include "include/SDL.h"
 #include "include/SDL_audio.h"
+#include "af_math.hpp"
 #include "af_gl.hpp"
 #include "af_keys.hpp"
 #include "af_audio.hpp"
 #include "af_3dmath.hpp"
 
-#define TAU 6.283185307
-typedef unsigned int uint;
 
-const uint afFrameTargetMS = 30;
+const uint afFrameTargetMS = 5;
 bool running = true;
 
 int main (const int argc, const char ** argv)
@@ -26,26 +25,6 @@ int main (const int argc, const char ** argv)
 
 	afAudioInit(&want, &have);
 
-#if 0
-// vim macro play area
-//	1--------------0
-// w = f1jlr1k0f0jhr00
-// a = yyp:s/[10]/-/gk@w
-// s = :s/1/2:s/0/1:s/2/0
-// d = 15@a@s
-#endif
-	afMat4 junk;
-	junk.print();
-	junk.rotate(TAU/4, 0.f, 0.f);
-	junk.print();
-	junk.translate(1.f, 2.f, 3.f);
-	junk.print();
-	junk.rotate(TAU/4, 0.f, 0.f);
-	junk.print();
-	printf("%f\n",junk.determinant());
-//
-//
-//
 
 	SDL_Window *window;
 
@@ -76,7 +55,7 @@ int main (const int argc, const char ** argv)
 	
 	glClearColor(0,0,0,1);
 
-	GLuint vbuffer=0, cbuffer;
+	GLuint vbuffer=0, cbuffer=0;
 	GLint vcolorattrib;
 	glGenBuffers(1,&vbuffer);
 	glGenBuffers(1,&cbuffer);
@@ -84,7 +63,7 @@ int main (const int argc, const char ** argv)
 	GLfloat triangle[9] = {
 		0,	1.f,	0,
 		0.4f,	-1.0f,	0,
-		-1.f,	-1.0f,	0,
+		-0.4f,	-1.0f,	0,
 	};
 
 	GLfloat colors[9] = {
@@ -114,6 +93,10 @@ int main (const int argc, const char ** argv)
 	unsigned long frame_start_perf, frame_end_perf,
 		      perf_frequency = SDL_GetPerformanceFrequency();
 
+	afMat4 junk;
+
+	float rotationphase = 0.f;
+
 	while (running) {
 		frame_start_perf = SDL_GetPerformanceCounter();
 		last_tick = current_tick;
@@ -132,13 +115,17 @@ int main (const int argc, const char ** argv)
 
 			}
 		}
-		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0.f, 0.1f, 261.6, 0.5);
 		if (gkey->pressedms > 300) running = false;
+		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0, 0.1, 261.6, 0.01);
 
 		afGLStartFrame();
 		afGLSet3D();
-		glLoadIdentity();
-		glTranslatef(0.f, 0.f, -10.f);
+		junk = afMat4::identity;
+		junk.rotate(rotationphase/100, rotationphase/10, 0);
+		junk.translate(0, 0, -5);
+		rotationphase += 1;
+
+		glLoadMatrixf(junk.m);
 
 		glUseProgram(shaderProgram);
 
@@ -159,7 +146,7 @@ int main (const int argc, const char ** argv)
 
 
 		frame_end_perf = SDL_GetPerformanceCounter();
-		uint frametime = (frame_end_perf - frame_start_perf) / (perf_frequency / 1000);
+		uint frametime = (frame_end_perf - frame_start_perf) / (perf_frequency / 1000.f);
 
 		if (frametime < afFrameTargetMS) {
 #if 0
@@ -182,9 +169,14 @@ int main (const int argc, const char ** argv)
 		}
 		afTickKeys(frametime);
 	};
+	junk.print();
+	printf("\n %f\n", junk.determinant());
 
 	if (vbuffer)
 		glDeleteBuffers(1,&vbuffer);
+
+	if (cbuffer)
+		glDeleteBuffers(1,&cbuffer);
 
 	SDL_GL_DeleteContext(afPrimaryGlContext);
 	SDL_DestroyWindow(window);

@@ -205,7 +205,40 @@ float	afMat4::getSubmatDet(int i, int j){
 }
 
 
+//	0	1	2	3
+//
+//	4	5	6	7
+//
+//	8	9	10	11
+//
+//	12	13	14	15
 void afMat4::rotate(float ex, float ey, float ez){
+	float
+/*a*/	cosx = cosf(ex),
+/*b*/	sinx = sinf(ex),
+/*c*/	cosy = cosf(ey),
+/*d*/	siny = sinf(ey),
+/*e*/	cosz = cosf(ez),
+/*f*/	sinz = sinf(ez),
+	cosxsiny = cosx * siny,
+	sinxsiny = sinx * siny;
+
+	afMat4 temp;
+	temp[0] = cosy * cosz ;
+	temp[4] = -cosy * sinz ;
+	temp[8] = -siny ;
+
+	temp[1] = -sinxsiny* cosz + cosx * sinz ;
+	temp[5] = sinxsiny* sinz + cosx * cosz ;
+	temp[9] = -sinx * cosy ;
+
+	temp[2] = cosxsiny* cosz + sinx * sinz ;
+	temp[6] = -cosxsiny* sinz + sinx * cosz ;
+	temp[10] = cosx * cosy ;
+
+	*this *= temp;
+
+#if 0
 	afMat4 temp;
 	afMat4 macc;
 	int iacc = 0;;
@@ -238,15 +271,9 @@ void afMat4::rotate(float ex, float ey, float ez){
 		*this *= macc * temp;
 	else
 		*this *= macc;
+#endif
 }
 
-//	0	1	2	3
-//
-//	4	5	6	7
-//
-//	8	9	10	11
-//
-//	12	13	14	15
 void afMat4::translate(float tx, float ty, float tz){
 	afMat4 temp;
 	temp[12] = tx;

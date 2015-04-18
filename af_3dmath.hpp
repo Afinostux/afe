@@ -2,6 +2,7 @@
 #pragma once
 #include <stdio.h>
 #include <math.h>
+#include "af_math.hpp"
 // homogeneous coordinates/vec4
 typedef struct hc4 {
 	static const hc4 identity;

@@ -133,7 +133,7 @@ void afPushAudio(float frametime)
 	
 	//fill audio buffer here
 	for (uint c = afSquareCount; c--;) {
-		if (afASS[c].endTime < writetime)
+		if (afASS[c].endTime < afAudioBuffer.audiotime)
 			afSquareCount--;
 		else {
 			afASS[c].addOutput(buffer, bufferSize, writetime);

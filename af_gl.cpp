@@ -166,7 +166,7 @@ void afGLSet3D(){
 	SDL_GetWindowSize(afGLWindow, &w, &h);
 	
 	float perspective[16];
-	afGLPerspective(perspective, 90.f, w / h, 1.f, 100.f);
+	afGLPerspective(perspective, 90.f, (float)w / (float)h, 1.f, 100.f);
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(perspective);

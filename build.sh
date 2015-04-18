@@ -4,7 +4,7 @@ SOURCES=""
 CSOURCES=""
 OBJECTS=""
 INCLUDEDIRS="./ include/"
-LIBDIRS="./"
+LIBDIRS="./ /usr/lib/"
 LIBS="m GL GLU SDL2 SDL2main stdc++"
 flags="-std=c++11 -g -fdiagnostics-show-option"
 

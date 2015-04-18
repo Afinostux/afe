@@ -107,10 +107,33 @@ typedef void (APIENTRY * glDeleteProgramFunc)(GLuint program);
 extern glDeleteProgramFunc glDeleteProgram;
 
 //
+//	General GL functions
+//
+
+#if 0
+//glGetFloatV(GL_MODELVIEW_MATRIX, &junk.m);
+typedef void (APIENTRY * glGetFloatvFunc)(GLenum pname, GLfloat * params);
+extern glGetFloatvFunc glGetFloatv;
+
+//glGetBooleanv
+typedef void (APIENTRY * glGetBooleanvFunc)(GLenum pname, GLboolean * params);
+extern glGetBooleanvFunc glGetBooleanv;
+
+//glGetIntegerv
+typedef void (APIENTRY * glGetIntegervFunc)(GLenum pname, GLint * params);
+extern glGetIntegervFunc glGetIntegerv;
+
+//glGetDoublev
+typedef void (APIENTRY * glGetDoublevFunc)(GLenum pname, GLdouble * params);
+extern glGetDoublevFunc glGetDoublev;
+#endif
+
+//
 //	Function prototype
 //
 
 //glggg
 //typedef void (APIENTRY * glgggFunc)(args);
 //extern glgggFunc glggg;
+
 void afLoadGL(void);
