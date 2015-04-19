@@ -7,6 +7,7 @@
 #include "af_keys.hpp"
 #include "af_audio.hpp"
 #include "af_3dmath.hpp"
+#include "af_iqe.hpp"
 
 
 const uint afFrameTargetMS = 5;
@@ -41,6 +42,7 @@ int main (const int argc, const char ** argv)
 		return 1;
 	}
 
+	afLoadIQE("cube.iqe");
 
 	afInitGL(window);
 
