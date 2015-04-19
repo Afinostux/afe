@@ -157,12 +157,13 @@ void	afMat4::transpose(){
 	swap = m[12]; m[12] = m[3]; m[3] = swap;
 }
 
+#if 0
 float	afMat4::determinant(){
 	float det, result = 0, i = 1;
 	int n;
 	for (n = 0; n < 4; n++, i *= -1)
 	{
-		det = getSubmatDet(0, n);
+		det = getSubmatDet(n, 0);
 		result += m[n] * det * i;
 	}
 	return result;
@@ -195,15 +196,21 @@ void	afMat4::getSubmat(float s[9], int i, int j){
 				m[ ( i + x ) % 4 + ( ( j + y ) % 4 ) * 4 ];
 }
 
+//	0	1	2
+//
+//	3	4	5
+//
+//	6	7	8
+
 float	afMat4::getSubmatDet(int i, int j){
 	float s[9];
 	getSubmat(s, i, j);
 
 	return	s[0] * ( s[4] * s[8] - s[7] * s[5] ) 
-	-	s[1] * ( s[3] * s[8] - s[6] * s[5] ) 
-	+	s[2] * ( s[3] * s[7] - s[6] * s[4] );
+	-	s[3] * ( s[1] * s[8] - s[2] * s[7] ) 
+	+	s[6] * ( s[1] * s[5] - s[2] * s[4] );
 }
-
+#endif
 
 //	0	1	2	3
 //

@@ -64,7 +64,7 @@ unsigned long int afGetWriteTime(void)
 }
 
 float audioscale = 1;
-const float audioceiling = 0.2f;
+const float audioceiling = 0.1f;
 
 void afAudioCallback(void *udata, Uint8 *stream, int len)
 {

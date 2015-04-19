@@ -88,10 +88,12 @@ typedef struct mat4 {
 	mat4 getTranspose();
 	void transpose();
 	float determinant();
+#if 0
 	mat4 getInverse();
 	void invert();
 	void getSubmat(float s[9], int i, int j);
 	float getSubmatDet(int i, int j);
+#endif
 
 	void rotate(float ex, float ey, float ez);
 	void translate(float tx, float ty, float tz);

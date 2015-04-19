@@ -21,7 +21,7 @@ int main (const int argc, const char ** argv)
 	want.freq = 48000;
 	want.format = AUDIO_F32;
 	want.channels = 1;
-	want.samples = 800;
+	want.samples = 400;
 
 	afAudioInit(&want, &have);
 
@@ -170,7 +170,6 @@ int main (const int argc, const char ** argv)
 		afTickKeys(frametime);
 	};
 	junk.print();
-	printf("\n %f\n", junk.determinant());
 
 	if (vbuffer)
 		glDeleteBuffers(1,&vbuffer);
