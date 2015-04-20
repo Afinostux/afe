@@ -1,5 +1,8 @@
 
 #include "af_cstrings.hpp"
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 bool afCstPartMatch(const char* line,
 	const char* comp){

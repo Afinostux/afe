@@ -1,5 +1,4 @@
 #include "af_iqe.hpp"
-#include <stdlib.h>
 #include <stdio.h>
 #include "include/SDL_rwops.h"
 #include "include/SDL_timer.h"
@@ -37,7 +36,6 @@ afModel* afGetModel(const char* modelname){
 	}
 	return 0;
 }
-
 
 //iqm text format
 #define IQELINESIZE 512
