@@ -26,7 +26,6 @@ int main (const int argc, const char ** argv)
 
 	afAudioInit(&want, &have);
 
-
 	SDL_Window *window;
 
 	window = SDL_CreateWindow(

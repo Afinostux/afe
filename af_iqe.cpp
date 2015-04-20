@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "include/SDL_rwops.h"
+#include "include/SDL_timer.h"
 
 enum af_iqe_vert_attributes {
 	IQEVA_POSITION = 0,
@@ -12,62 +13,52 @@ enum af_iqe_vert_attributes {
 	IQEVA_SIZE
 };
 
-struct afIQEBlendIndex {
-	uint index;
-	float weight;
-};
-
 static const float
 afIqeDefPositions[4] = {0, 0, 0, 1},
 afIqeDefTcoords[2] = {0, 0};
 
-bool afIQEPartMatch(const char* line, const char* comp){
-	uint linepos = 0;
-	while (comp[linepos]){
-		if (line[linepos] != comp[linepos]) return false;
-		linepos++;
-	}
-	return true;
+#define AF_MAXMODELS 128
+afModel afModelPool[AF_MAXMODELS] = {};
+uint afModelCount = 0;
+
+afModel* afAddModel(const char* modelname){
+	if (afModelCount == AF_MAXMODELS) return 0;
+	afModelPool[afModelCount].name = modelname;
+	return &afModelPool[afModelCount++];
 }
 
-void afIQEFillf(const char* line,
-		uint linepos,
-		const float * defaults,
-		float *dest,
-		const uint count) {
-	if (defaults) {
-		for (uint vpi = 0; vpi < count; vpi++){
-			while (isspace(line[++linepos]));
-			if (line[linepos])
-				dest[vpi] = atof(&line[linepos]);
-			else
-				dest[vpi] = defaults[vpi];
-			while (!isspace(line[++linepos]));
+afModel* afGetModel(const char* modelname){
+	afModel* mpp = afModelPool;
+	for (uint i = 0; i < afModelCount; i++){
+		if (!strcmp(modelname, mpp->name)){
+			return mpp;
 		}
-	} else {
-		for (uint vpi = 0; vpi < count; vpi++){
-			while (isspace(line[++linepos]));
-			if (line[linepos])
-				dest[vpi] = atof(&line[linepos]);
-			else
-				dest[vpi] = 0;
-			while (!isspace(line[++linepos]));
-		}
+		mpp++;
 	}
+	return 0;
 }
+
 
 //iqm text format
 #define IQELINESIZE 512
-bool afLoadIQE(const char* fname){
+afModel* afLoadIQE(const char* fname){
+	Uint64 perfstart = SDL_GetPerformanceCounter(), perfend;
 	SDL_RWops * file = SDL_RWFromFile(fname,"r");
 	SDL_RWops * output = SDL_RWFromFile("IQE_OUT.txt","w");
 	if (!file) {
 		fprintf(stderr, "error loading %s\n%s\n", fname, SDL_GetError());
-		return false;
+		return 0;
 	}
 
+	Uint64 filesize = SDL_RWsize(file);
+
+	char * filecont = (char*)malloc(filesize);
+	SDL_RWread(file, filecont, filesize, 1);
+	SDL_RWclose(file);
+	file = SDL_RWFromMem(filecont, filesize);
+
 	float vpos[4], texcoord[2], normal[3], color[4], custom[4];
-	afIQEBlendIndex index[4] = {};
+	char objectname[32] = {};
 
 	int triindex[3];
 
@@ -76,7 +67,7 @@ bool afLoadIQE(const char* fname){
 	char cchar;
 	uint 
 		linepos = 0,
-		linecounter = 0;
+		linecounter = 1;
 	bool validheader = false;
 	bool error = false;
 	bool emptyline;
@@ -92,7 +83,7 @@ bool afLoadIQE(const char* fname){
 
 		if (cchar == '\n') {
 			line[linepos] = 0;
-			snprintf(outline, IQELINESIZE, "(%u) %s", linecounter,
+			snprintf(outline, IQELINESIZE, "%s", 
 					line);
 			SDL_RWwrite(output, outline, strlen(outline), 1);
 			linepos = 0;
@@ -117,7 +108,7 @@ bool afLoadIQE(const char* fname){
 								{
 									case 'p': /*vp = position*/
 									{
-										afIQEFillf(line,
+										afFillBuff(line,
 											linepos + 2,
 											afIqeDefPositions,
 											vpos, 4);
@@ -129,7 +120,7 @@ bool afLoadIQE(const char* fname){
 									} break;
 									case 't': /*vt = texcoord*/
 									{
-										afIQEFillf(line,
+										afFillBuff(line,
 											linepos + 2,
 											afIqeDefTcoords,
 											texcoord, 2);
@@ -140,7 +131,7 @@ bool afLoadIQE(const char* fname){
 									} break;
 									case 'n': /*vn = normal*/
 									{
-										afIQEFillf(line,
+										afFillBuff(line,
 											linepos + 2,
 											0,
 											normal, 3);
@@ -151,7 +142,7 @@ bool afLoadIQE(const char* fname){
 									} break;
 									case 'c': /*vc = color*/
 									{
-										afIQEFillf(line,
+										afFillBuff(line,
 											linepos + 2,
 											afIqeDefPositions,
 											color, 4);
@@ -163,9 +154,9 @@ bool afLoadIQE(const char* fname){
 									default:
 									{
 										if (isdigit(line[linepos+1])){
-											afIQEFillf(line,
+											afFillBuff(line,
 												linepos + 2,
-												afIqeDefCustom,
+												0,
 												custom, 4);
 											int customi = atoi(&line[linepos+1]);
 											snprintf(outline, IQELINESIZE,
@@ -187,20 +178,57 @@ bool afLoadIQE(const char* fname){
 								{
 									case 'a':
 									{
-										afIQEFillf(
+										afFillBufi(
 											line,
 											linepos + 2,
-
+											0, 
+											triindex, 3);
+										snprintf(outline, IQELINESIZE,
+										"#\tabsolute triangle [%i %i %i]\n",
+										triindex[0], triindex[1], triindex[2]);
+										SDL_RWwrite(output, outline, strlen(outline), 1);
 									} break;
 									case 'm':
 									{
+										afFillBufi(
+											line,
+											linepos + 2,
+											0, 
+											triindex, 3);
+										snprintf(outline, IQELINESIZE,
+										"#\tmesh relative triangle [%i %i %i]\n",
+										triindex[0], triindex[1], triindex[2]);
+										SDL_RWwrite(output, outline, strlen(outline), 1);
 									} break;
+									default:
+									{
+										//error = true;
+										fprintf(stderr,
+										"Bad command! line %u of %s\n(%s)\n",
+										linecounter, fname, line);
+									}
 								}
-							}
+							} break;
 							default:
 							{
-								if (afIQEPartMatch(&line[linepos], "mesh")){
-								} else if (afIQEPartMatch(&line[linepos], "material")) {
+								if (afCstPartMatch(&line[linepos], "mesh")){
+									afFillCst(line,
+										linepos,
+										objectname,
+										32);
+									snprintf(outline, IQELINESIZE,
+									"#\tnew mesh [%s]\n",
+									objectname);
+									SDL_RWwrite(output, outline, strlen(outline), 1);
+								} else if (afCstPartMatch(&line[linepos], "material")) {
+									afFillCst(line,
+										linepos,
+										objectname,
+										32);
+									snprintf(outline, IQELINESIZE,
+									"#\tnew material [%s]\n",
+									objectname);
+									SDL_RWwrite(output, outline, strlen(outline), 1);
 								} else {
 									//error = true;
 									fprintf(stderr,
@@ -212,7 +240,7 @@ bool afLoadIQE(const char* fname){
 					}
 				}
 			} else {
-				validheader = afIQEPartMatch(line, "# Inter-Quake Export");
+				validheader = afCstPartMatch(line, "# Inter-Quake Export");
 				if (!validheader) {
 					fprintf(stderr,
 					"Bad header! line %u of %s\n",
@@ -230,7 +258,10 @@ bool afLoadIQE(const char* fname){
 
 	SDL_RWclose(output);
 	SDL_RWclose(file);
-	return false;
+	perfend = SDL_GetPerformanceCounter();
+	printf("%lu\n", (perfend - perfstart));
+	free(filecont);
+	return 0;
 }
 #undef IQELINESIZE
 
