@@ -13,11 +13,7 @@ SDL_GLContext afPrimaryGlContext;
 
 
 bool afInitGL(SDL_Window * window);
-void afGLStartFrame();
-void afGLSet2D();
-void afGLSet3D();
-void afGLEndFrame();
 GLuint afGetShaderTypeByExtension(const char *fname);
 GLuint afLoadShader(const char *fname);
-GLuint afMakeGLProgram(GLuint vs, GLuint ps);
+GLuint afMakeGLProgram(GLuint vs, GLuint ps, GLuint attribute_count, const GLchar ** attribute_list, GLint * attribute_out);
 void afDebugShaderObject(GLuint oid);

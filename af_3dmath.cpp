@@ -212,6 +212,40 @@ float	afMat4::getSubmatDet(int i, int j){
 }
 #endif
 
+void afMat4::frustum(float left, float right,
+		float bottom, float top, float near,
+		float far){
+	float 
+	twicenear = 2 * near,
+	width = right - left,
+	height = top - bottom,
+	depth = far - near;
+	m[0] = twicenear / width;
+	m[1] = 0.0f;
+	m[2] = 0.0f;
+	m[3] = 0.0f;
+	m[4] = 0.0f;
+	m[5] = twicenear / height;
+	m[6] = 0.0f;
+	m[7] = 0.0f;
+	m[8] = (right + left) / width;
+	m[9] = (top + bottom) / height;
+	m[10] = (-far - near) / depth;
+	m[11] = -1.0f;
+	m[12] = 0.0f;
+	m[13] = 0.0f;
+	m[14] = (-twicenear * far) / depth;
+	m[15] = 0.0f;
+}
+
+void afMat4::perspective(float fovy, float aspect,
+		float znear, float zfar){
+	float
+	ymax = znear * tanf(fovy * (M_PI / 360.0)),
+	xmax = ymax * aspect;
+	frustum(-xmax, xmax, -ymax, ymax, znear, zfar);
+}
+
 //	0	1	2	3
 //
 //	4	5	6	7

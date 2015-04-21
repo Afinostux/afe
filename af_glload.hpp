@@ -102,31 +102,19 @@ extern glIsProgramFunc glIsProgram;
 typedef void (APIENTRY * glGetProgramInfoLogFunc)(GLuint shader, GLsizei maxLength, GLsizei *length, GLchar *infolog);
 extern glGetProgramInfoLogFunc glGetProgramInfoLog;
 
+//glGetActiveAttrib
+typedef void (APIENTRY * glGetActiveAttribFunc)(	GLuint program,
+ 	GLuint index,
+ 	GLsizei bufSize,
+ 	GLsizei *length,
+ 	GLint *size,
+ 	GLenum *type,
+ 	GLchar *name);
+extern glGetActiveAttribFunc glGetActiveAttrib;
+
 //glDeleteProgram
 typedef void (APIENTRY * glDeleteProgramFunc)(GLuint program);
 extern glDeleteProgramFunc glDeleteProgram;
-
-//
-//	General GL functions
-//
-
-#if 0
-//glGetFloatV(GL_MODELVIEW_MATRIX, &junk.m);
-typedef void (APIENTRY * glGetFloatvFunc)(GLenum pname, GLfloat * params);
-extern glGetFloatvFunc glGetFloatv;
-
-//glGetBooleanv
-typedef void (APIENTRY * glGetBooleanvFunc)(GLenum pname, GLboolean * params);
-extern glGetBooleanvFunc glGetBooleanv;
-
-//glGetIntegerv
-typedef void (APIENTRY * glGetIntegervFunc)(GLenum pname, GLint * params);
-extern glGetIntegervFunc glGetIntegerv;
-
-//glGetDoublev
-typedef void (APIENTRY * glGetDoublevFunc)(GLenum pname, GLdouble * params);
-extern glGetDoublevFunc glGetDoublev;
-#endif
 
 //
 //	Function prototype

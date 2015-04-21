@@ -95,6 +95,12 @@ typedef struct mat4 {
 	float getSubmatDet(int i, int j);
 #endif
 
+	void frustum(float left, float right,
+		float bottom, float top,
+		float near, float far);
+	void perspective(float fovy, float aspect,
+		float znear, float zfar);
+
 	void rotate(float ex, float ey, float ez);
 	void translate(float tx, float ty, float tz);
 

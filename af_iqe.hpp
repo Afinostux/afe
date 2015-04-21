@@ -5,16 +5,17 @@
 
 typedef struct afVertex {
 	afVec4 position;
+	afVec4 color;
 } afVertex;
 
 typedef struct afMesh {
-	const char* name;
+	char* name;
 	int * indices;
 	int indexCount;
 } afMesh;
 
 typedef struct afModel {
-	const char* name;
+	char* name;
 	afVertex* vertices;
 	afMesh* meshes;
 

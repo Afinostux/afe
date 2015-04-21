@@ -8,6 +8,7 @@
 #include "af_audio.hpp"
 #include "af_3dmath.hpp"
 #include "af_iqe.hpp"
+#include "afrendergl2.hpp"
 
 
 const uint afFrameTargetMS = 5;
@@ -41,52 +42,13 @@ int main (const int argc, const char ** argv)
 		return 1;
 	}
 
-	afLoadIQE("cube.iqe");
+	afModel * cuber = afLoadIQE("cube.iqe");
 
-	afInitGL(window);
-
-	GLuint
-		vertShader = afLoadShader("basic.vert"),
-		fragShader = afLoadShader("basic.frag");
-
-	GLuint
-		shaderProgram = afMakeGLProgram(vertShader, fragShader);
+	afR = createRendererG2(afPrimaryGlContext);
+	afRInit(window);
 
 	SDL_Event event;
 	
-	glClearColor(0,0,0,1);
-
-	GLuint vbuffer=0, cbuffer=0;
-	GLint vcolorattrib;
-	glGenBuffers(1,&vbuffer);
-	glGenBuffers(1,&cbuffer);
-
-	GLfloat triangle[9] = {
-		0,	1.f,	0,
-		0.4f,	-1.0f,	0,
-		-0.4f,	-1.0f,	0,
-	};
-
-	GLfloat colors[9] = {
-		1.f, 0.f, 0.f,
-		0.f, 1.f, 0.f,
-		0.f, 0.f, 1.f,
-	};
-
-	if (!vbuffer || !cbuffer || !shaderProgram) {running = false;}
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*9, triangle, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, cbuffer);
-	glBufferData(GL_ARRAY_BUFFER,sizeof(GLfloat)*9, colors, GL_STATIC_DRAW);
-
-	vcolorattrib = glGetAttribLocation(shaderProgram, "v_color");
-	if (vcolorattrib == -1) {
-		fprintf(stderr, "v_color failed");
-		running = false;
-	}
-
 	afeKey *gkey = afGetKey(SDLK_g);
 	afeKey *nkey = afGetKey(SDLK_n);
 
@@ -116,35 +78,21 @@ int main (const int argc, const char ** argv)
 
 			}
 		}
-		if (gkey->pressedms > 300) running = false;
+		if (gkey->pressed) running = false;
 		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0, 0.1, 261.6, 0.01);
 
-		afGLStartFrame();
-		afGLSet3D();
 		junk = afMat4::identity;
 		junk.rotate(rotationphase/100, rotationphase/10, 0);
-		junk.translate(0, 0, -5);
+		junk.translate( sin(rotationphase/10),cos(rotationphase/10), -10);
+		//junk.translate(sin(rotationphase/1000) * 10, sin(rotationphase/100) * 10, sin(rotationphase/10) * 10);
 		rotationphase += 1;
 
+
+		afRBeginFrame();
+		afRBegin3D();
 		glLoadMatrixf(junk.m);
-
-		glUseProgram(shaderProgram);
-
-		glEnableVertexAttribArray(vcolorattrib);
-		glBindBuffer(GL_ARRAY_BUFFER, cbuffer);
-		glVertexAttribPointer(vcolorattrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbuffer);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, 0, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDisableClientState(GL_VERTEX_ARRAY);
-
-		glDisableVertexAttribArray(vcolorattrib);
-
-
-		afGLEndFrame();
-
+		afRDrawModel(cuber);
+		afREndFrame();
 
 		frame_end_perf = SDL_GetPerformanceCounter();
 		uint frametime = (frame_end_perf - frame_start_perf) / (perf_frequency / 1000.f);
@@ -170,13 +118,8 @@ int main (const int argc, const char ** argv)
 		}
 		afTickKeys(frametime);
 	};
+	glGetFloatv(GL_PROJECTION_MATRIX, junk.m);
 	junk.print();
-
-	if (vbuffer)
-		glDeleteBuffers(1,&vbuffer);
-
-	if (cbuffer)
-		glDeleteBuffers(1,&cbuffer);
 
 	SDL_GL_DeleteContext(afPrimaryGlContext);
 	SDL_DestroyWindow(window);

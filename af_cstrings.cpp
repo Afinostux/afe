@@ -15,6 +15,35 @@ bool afCstPartMatch(const char* line,
 	return true;
 }
 
+uint afCstCountCstUntil(const char* line,
+	const char* token,
+	const char* breaktoken){
+
+	uint 
+	count = 0,
+	tokenpos = 0,
+	breaktokenpos = 0;
+
+	while (*line){
+		if ((*line) == token[tokenpos]) {
+			tokenpos++;
+			if (!token[tokenpos]){
+				tokenpos = 0;
+				count++;
+			}
+		}
+		if ((*line) == breaktoken[breaktokenpos]) {
+			breaktokenpos++;
+			if (!breaktoken[breaktokenpos]){
+				break;
+			}
+		}
+		line++;
+	}
+
+	return count;
+}
+
 uint afCstCountCst(const char* line,
 	const char* token){
 
@@ -32,26 +61,29 @@ uint afCstCountCst(const char* line,
 		}
 		line++;
 	}
-
 	return count;
 }
 
-void afFillCst(const char* line,
+int afFillCst(const char* line,
 	uint linepos,
 	char * dest,
 	const uint max){
+
+	int sizeofnewline = 0;
 
 	while (line[++linepos]!='\"');
 	linepos++;
 	for (uint i = 0; i < max; i++){
 		dest[i] = line[linepos];
-		if (!dest[i]) return;
+		sizeofnewline++;
+		if (!dest[i]) return sizeofnewline;
 		if (dest[i] == '\"'){
 			dest[i] = 0;
-			return;
+			return sizeofnewline;
 		}
 		linepos++;
 	}
+	return sizeofnewline;
 }
 
 

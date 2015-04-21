@@ -1,5 +1,7 @@
 #include "af_iqe.hpp"
 #include <stdio.h>
+#include <malloc.h>
+#include <stdlib.h>
 #include "include/SDL_rwops.h"
 #include "include/SDL_timer.h"
 
@@ -21,9 +23,20 @@ afModel afModelPool[AF_MAXMODELS] = {};
 uint afModelCount = 0;
 
 afModel* afAddModel(const char* modelname){
+	afModel * result;
 	if (afModelCount == AF_MAXMODELS) return 0;
-	afModelPool[afModelCount].name = modelname;
-	return &afModelPool[afModelCount++];
+	result = &afModelPool[afModelCount];
+	uint mnamepos = 0, i;
+
+	while (modelname[mnamepos] && modelname[mnamepos] != '.') mnamepos++;
+	result->name = (char*)malloc(mnamepos+1);
+
+	for (i = 0; i < mnamepos; i++){
+		result->name[i] = modelname[i];
+	}
+	result->name[mnamepos] = 0;
+	afModelCount++;
+	return result;
 }
 
 afModel* afGetModel(const char* modelname){
@@ -42,48 +55,66 @@ afModel* afGetModel(const char* modelname){
 afModel* afLoadIQE(const char* fname){
 	Uint64 perfstart = SDL_GetPerformanceCounter(), perfend;
 	SDL_RWops * file = SDL_RWFromFile(fname,"r");
-	SDL_RWops * output = SDL_RWFromFile("IQE_OUT.txt","w");
 	if (!file) {
 		fprintf(stderr, "error loading %s\n%s\n", fname, SDL_GetError());
 		return 0;
 	}
 
+
 	Uint64 filesize = SDL_RWsize(file);
 
-	char * filecont = (char*)malloc(filesize);
+	char * filecont = (char*)malloc(filesize+1);
 	SDL_RWread(file, filecont, filesize, 1);
 	SDL_RWclose(file);
-	file = SDL_RWFromMem(filecont, filesize);
 
-	float vpos[4], texcoord[2], normal[3], color[4], custom[4];
+	float vpos[4]={}, texcoord[2]={}, normal[3]={}, color[4]={}, custom[4]={};
+
+	uint 
+	vposindex = 0,
+	texcoordindex = 0,
+	normalindex = 0,
+	colorindex = 0,
+	customindex = 0;
+
 	char objectname[32] = {};
+	uint objectnamesize = 0;
 
-	int triindex[3];
+	uint triindexg = 0;
 
 	char line[IQELINESIZE] = {};
-	char outline[IQELINESIZE] = {};
 	char cchar;
 	uint 
 		linepos = 0,
-		linecounter = 1;
+		linecounter = 1,
+		filepos = 0;
 	bool validheader = false;
 	bool error = false;
 	bool emptyline;
+
+	afModel * newmodel = afAddModel(fname);
+	newmodel->afVertexCount = afCstCountCst(filecont, "vp");
+	newmodel->afMeshCount = afCstCountCst(filecont, "mesh");
+
+	newmodel->meshes = (afMesh*)malloc(sizeof(afMesh) * newmodel->afMeshCount);
+	afMesh* currentmesh = 0;
+	uint meshindex = 0;
+	uint meshtricount = 0;
+	newmodel->vertices = (afVertex*)malloc(sizeof(afVertex) * newmodel->afVertexCount);
 	
-	while (SDL_RWread(file, &line[linepos++], 1, 1) && !error) {
+	while (filepos < filesize && !error) {
 		if (linepos > IQELINESIZE) {
 			fprintf(stderr,
 			"line overflow! line %u of %s\n",
 			linecounter, fname);
 			break;
 		}
+
+		line[linepos++] = filecont[filepos++];
+
 		cchar = line[linepos-1];
 
 		if (cchar == '\n') {
 			line[linepos] = 0;
-			snprintf(outline, IQELINESIZE, "%s", 
-					line);
-			SDL_RWwrite(output, outline, strlen(outline), 1);
 			linepos = 0;
 			emptyline = false;
 
@@ -106,15 +137,15 @@ afModel* afLoadIQE(const char* fname){
 								{
 									case 'p': /*vp = position*/
 									{
+										afVec4 *cpos = &newmodel->vertices[vposindex++].position;
 										afFillBuff(line,
 											linepos + 2,
 											afIqeDefPositions,
 											vpos, 4);
-
-										snprintf(outline, IQELINESIZE,
-										"#	vertex position [%.2f %.2f %.2f %.2f]\n",
-										vpos[0], vpos[1], vpos[2], vpos[3]);
-										SDL_RWwrite(output, outline, strlen(outline), 1);
+										cpos->x = vpos[0];
+										cpos->y = vpos[1];
+										cpos->z = vpos[2];
+										cpos->w = vpos[3];
 									} break;
 									case 't': /*vt = texcoord*/
 									{
@@ -122,10 +153,6 @@ afModel* afLoadIQE(const char* fname){
 											linepos + 2,
 											afIqeDefTcoords,
 											texcoord, 2);
-										snprintf(outline, IQELINESIZE,
-										"#	texcoord [%.2f %.2f]\n",
-										texcoord[0], texcoord[1]);
-										SDL_RWwrite(output, outline, strlen(outline), 1);
 									} break;
 									case 'n': /*vn = normal*/
 									{
@@ -133,21 +160,18 @@ afModel* afLoadIQE(const char* fname){
 											linepos + 2,
 											0,
 											normal, 3);
-										snprintf(outline, IQELINESIZE,
-										"#	normal [%.2f %.2f %.2f]\n",
-										normal[0], normal[1], normal[2]);
-										SDL_RWwrite(output, outline, strlen(outline), 1);
 									} break;
 									case 'c': /*vc = color*/
 									{
+										afVec4 *ccol = &newmodel->vertices[colorindex++].color;
 										afFillBuff(line,
 											linepos + 2,
 											afIqeDefPositions,
 											color, 4);
-										snprintf(outline, IQELINESIZE,
-										"#	color [%.2f %.2f %.2f %.2f]\n",
-										color[0], color[1], color[2], color[3]);
-										SDL_RWwrite(output, outline, strlen(outline), 1);
+										ccol->x = color[0];
+										ccol->y = color[1];
+										ccol->z = color[2];
+										ccol->w = color[3];
 									} break;
 									default:
 									{
@@ -157,10 +181,6 @@ afModel* afLoadIQE(const char* fname){
 												0,
 												custom, 4);
 											int customi = atoi(&line[linepos+1]);
-											snprintf(outline, IQELINESIZE,
-											"#	custom%u [%.2f %.2f %.2f %.2f]\n",
-											customi, custom[0], custom[1], custom[2], custom[3]);
-											SDL_RWwrite(output, outline, strlen(outline), 1);
 										} else {
 											//error = true;
 											fprintf(stderr,
@@ -174,6 +194,7 @@ afModel* afLoadIQE(const char* fname){
 							{
 								switch (line[linepos+1])
 								{
+#if 0
 									case 'a':
 									{
 										afFillBufi(
@@ -181,22 +202,22 @@ afModel* afLoadIQE(const char* fname){
 											linepos + 2,
 											0, 
 											triindex, 3);
-										snprintf(outline, IQELINESIZE,
-										"#\tabsolute triangle [%i %i %i]\n",
-										triindex[0], triindex[1], triindex[2]);
-										SDL_RWwrite(output, outline, strlen(outline), 1);
 									} break;
+#endif
 									case 'm':
 									{
-										afFillBufi(
-											line,
-											linepos + 2,
-											0, 
-											triindex, 3);
-										snprintf(outline, IQELINESIZE,
-										"#\tmesh relative triangle [%i %i %i]\n",
-										triindex[0], triindex[1], triindex[2]);
-										SDL_RWwrite(output, outline, strlen(outline), 1);
+										if (!currentmesh){
+											fprintf(stderr,
+											"Mesh relative index with no mesh! line %u of %s\n(%s)\n",
+											linecounter, fname, line);
+										} else {
+											afFillBufi(
+												line,
+												linepos + 2,
+												0, 
+												&currentmesh->indices[triindexg], 3);
+											triindexg += 3;
+										}
 									} break;
 									default:
 									{
@@ -210,23 +231,19 @@ afModel* afLoadIQE(const char* fname){
 							default:
 							{
 								if (afCstPartMatch(&line[linepos], "mesh")){
-									afFillCst(line,
+									objectnamesize = afFillCst(line,
 										linepos,
 										objectname,
 										32);
-									snprintf(outline, IQELINESIZE,
-									"#\tnew mesh [%s]\n",
-									objectname);
-									SDL_RWwrite(output, outline, strlen(outline), 1);
+									currentmesh = &newmodel->meshes[meshindex++];
+									currentmesh->indexCount = afCstCountCstUntil(&filecont[filepos+linepos+4], "fm", "mesh") * 3;
+									currentmesh->indices = (int*)malloc(sizeof(int) * (currentmesh->indexCount * 3));
+									triindexg = 0;
 								} else if (afCstPartMatch(&line[linepos], "material")) {
 									afFillCst(line,
 										linepos,
 										objectname,
 										32);
-									snprintf(outline, IQELINESIZE,
-									"#\tnew material [%s]\n",
-									objectname);
-									SDL_RWwrite(output, outline, strlen(outline), 1);
 								} else {
 									//error = true;
 									fprintf(stderr,
@@ -254,12 +271,10 @@ afModel* afLoadIQE(const char* fname){
 
 	}
 
-	SDL_RWclose(output);
-	SDL_RWclose(file);
 	perfend = SDL_GetPerformanceCounter();
 	printf("%lu\n", (perfend - perfstart));
 	free(filecont);
-	return 0;
+	return newmodel;
 }
 #undef IQELINESIZE
 

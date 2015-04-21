@@ -29,6 +29,7 @@ glUseProgramFunc		glUseProgram=0;
 glIsProgramFunc			glIsProgram=0;
 glGetProgramInfoLogFunc		glGetProgramInfoLog=0;
 glDeleteProgramFunc		glDeleteProgram=0;
+glGetActiveAttribFunc glGetActiveAttrib=0;
 
 void afLoadGL()
 {
@@ -87,4 +88,6 @@ void afLoadGL()
 	if (!glGetProgramInfoLog ) printf("glGetProgramInfoLog  not supported\n");
 	glDeleteProgram = (glDeleteProgramFunc)SDL_GL_GetProcAddress("glDeleteProgram");
 	if (!glDeleteProgram ) printf("glDeleteProgram  not supported\n");
+	glGetActiveAttrib = (glGetActiveAttribFunc)SDL_GL_GetProcAddress("glGetActiveAttrib");
+	if (!glGetActiveAttrib ) printf("glGetActiveAttrib  not supported\n");
 }

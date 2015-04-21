@@ -36,38 +36,64 @@ GLuint afLoadShader(const char *fname)
 	SDL_RWops * shaderFile = SDL_RWFromFile(fname,"r");
 	if (!shaderFile) return 0;
 
-	size_t size = SDL_RWsize(shaderFile);
+	int size = SDL_RWsize(shaderFile);
 
-	char *fcontents = (char*)malloc(size);
-	const GLchar * source[1] = {fcontents};
-	
-	SDL_RWread(shaderFile, fcontents, size, 1);
+	unsigned char *fcontents = (unsigned char*)malloc(size+1);
+	SDL_RWread(shaderFile, fcontents, size+1, 1);
+	fcontents[size] = 0;
 
-	glShaderSource(result, 1, source, 0);
+	bool ispound = false;
+
+#if 0
+	for (int i = 0; i < size; i++){
+		if (ispound){
+			if (fcontents[i] == '\n') ispound = false;
+		} else {
+			if (fcontents[i] == '#') ispound = false;
+			if (fcontents[i] == '\n') fcontents[i] = ' ';
+		}
+	}
+#endif
+
+	glShaderSource(result, 1, (const GLchar**)&fcontents, 0);
 	//free((void*)source);
-	free((void*)fcontents);
 
 	glCompileShader(result);
 
 	GLint compile_ok = GL_FALSE;
 	glGetShaderiv(result, GL_COMPILE_STATUS, &compile_ok);
 
+
 	if (!compile_ok) {
+		fprintf(stderr,"%s\n", fcontents);
 		fprintf(stderr,"failed to load %s\n", fname);
+		SDL_RWops * debugout = SDL_RWFromFile("ERROR.txt","w");
+		SDL_RWwrite(debugout, fcontents, 1, size);
+		SDL_RWclose(debugout);
 		afDebugShaderObject(result);
 		glDeleteShader(result);
 		result = 0;
 	}
 	
+	free((void*)fcontents);
 	SDL_RWclose(shaderFile);
 	return result;
 }
 
-GLuint afMakeGLProgram(GLuint vs, GLuint ps){
+GLuint afMakeGLProgram(GLuint vs, GLuint ps, GLuint attribute_count, const GLchar ** attribute_list, GLint * attribute_out)
+{
 	if (vs == 0 || ps == 0) return 0;
 	GLuint result = glCreateProgram();
 	glAttachShader(result, vs);
 	glAttachShader(result, ps);
+
+	while (attribute_count--){
+		attribute_out[attribute_count] = glGetAttribLocation(result, attribute_list[attribute_count]);
+		if (attribute_out[attribute_count] == -1) {
+			fprintf(stderr, "%s failed\n", attribute_list[attribute_count]);
+		}
+	}
+
 	glLinkProgram(result);
 	
 	GLint compile_ok = GL_FALSE;
@@ -102,78 +128,5 @@ void afDebugShaderObject(GLuint oid){
 	free(logGL);
 }
 
-void afGLFrustum(float *matrix,
-		float left, float right,
-		float bottom, float top,
-		float near, float far){
-	float 
-	twicenear = 2 * near,
-	width = right - left,
-	height = top - bottom,
-	depth = far - near;
-	matrix[0] = twicenear / width;
-	matrix[1] = 0.0f;
-	matrix[2] = 0.0f;
-	matrix[3] = 0.0f;
-	matrix[4] = 0.0f;
-	matrix[5] = twicenear / height;
-	matrix[6] = 0.0f;
-	matrix[7] = 0.0f;
-	matrix[8] = (right + left) / width;
-	matrix[9] = (top + bottom) / height;
-	matrix[10] = (-far - near) / depth;
-	matrix[11] = -1.0f;
-	matrix[12] = 0.0f;
-	matrix[13] = 0.0f;
-	matrix[14] = (-twicenear * far) / depth;
-	matrix[15] = 0.0f;
-}
-
-void afGLPerspective(float *matrix,
-		float fovy, float aspect,
-		float znear, float zfar) {
-	float
-	ymax = znear * tanf(fovy * M_PI / 360.0),
-	xmax = ymax * aspect;
-	afGLFrustum(matrix, -xmax, xmax, -ymax, ymax, znear, zfar);
-}
-
 SDL_Window * afGLWindow;
-
-bool afInitGL(SDL_Window * window)
-{
-	afPrimaryGlContext = SDL_GL_CreateContext(window);
-	afGLWindow = window;
-	afLoadGL();
-	glClearColor(0,0,0,1);
-
-	return 0;
-}
-
-void afGLStartFrame(){
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void afGLSet2D(){
-	glDisable(GL_DEPTH_TEST);
-}
-
-
-void afGLSet3D(){
-	int w, h;
-	glEnable(GL_DEPTH_TEST);
-
-	SDL_GetWindowSize(afGLWindow, &w, &h);
-	
-	float perspective[16];
-	afGLPerspective(perspective, 90.f, (float)w / (float)h, 1.f, 100.f);
-	
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(perspective);
-	glMatrixMode(GL_MODELVIEW);
-}
-
-void afGLEndFrame(){
-	SDL_GL_SwapWindow(afGLWindow);
-}
 
