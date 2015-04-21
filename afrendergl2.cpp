@@ -1,6 +1,6 @@
 
 #include "afrendergl2.hpp"
-#include "af_3dmath.hpp"
+#include "af3dmath.hpp"
 
 void afG2Init(afRenderer * self, SDL_Window * window){
 	self->context = SDL_GL_CreateContext(window);

@@ -1,7 +1,7 @@
 
 #pragma once
-#include "af_3dmath.hpp"
-#include "af_cstrings.hpp"
+#include "af3dmath.hpp"
+#include "afcstrings.hpp"
 
 typedef struct afVertex {
 	afVec4 position;

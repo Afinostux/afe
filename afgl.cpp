@@ -1,5 +1,5 @@
 
-#include "af_gl.hpp"
+#include "afgl.hpp"
 #include "include/SDL_video.h"
 #include "include/SDL_rwops.h"
 

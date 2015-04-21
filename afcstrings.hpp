@@ -1,6 +1,6 @@
 
 #pragma once
-#include "af_math.hpp"
+#include "afmath.hpp"
 bool afCstPartMatch(const char* line, const char* comp);
 uint afCstCountCstUntil(const char* line, const char* token, const char* breaktoken);
 uint afCstCountCst(const char* line, const char* token);

@@ -1,8 +1,8 @@
 
 #pragma once
 #include "include/SDL_video.h"
-#include "af_iqe.hpp"
-#include "af_3dmath.hpp"
+#include "afiqe.hpp"
+#include "af3dmath.hpp"
 
 typedef struct afRenderer {
 	SDL_Window * window;

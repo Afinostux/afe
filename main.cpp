@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include "include/SDL.h"
 #include "include/SDL_audio.h"
-#include "af_math.hpp"
-#include "af_gl.hpp"
-#include "af_keys.hpp"
-#include "af_audio.hpp"
-#include "af_3dmath.hpp"
-#include "af_iqe.hpp"
+#include "afmath.hpp"
+#include "afgl.hpp"
+#include "afkeys.hpp"
+#include "afaudio.hpp"
+#include "af3dmath.hpp"
+#include "afiqe.hpp"
 #include "afrendergl2.hpp"
 
 

@@ -1,11 +1,11 @@
-#include "af_iqe.hpp"
+#include "afiqe.hpp"
 #include <stdio.h>
 #include <malloc.h>
 #include <stdlib.h>
 #include "include/SDL_rwops.h"
 #include "include/SDL_timer.h"
 
-enum af_iqe_vert_attributes {
+enum afiqe_vert_attributes {
 	IQEVA_POSITION = 0,
 	IQEVA_TEXCOORD,
 	IQEVA_NORMAL,

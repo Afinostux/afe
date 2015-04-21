@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "af_glload.hpp"
+#include "afglload.hpp"
 
 enum afShaderTypes{
 	FAIL_SHADER=0,

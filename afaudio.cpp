@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "af_audio.hpp"
+#include "afaudio.hpp"
 
 SDL_AudioDeviceID afDevice = 0;
 afAudioRing afAudioBuffer = {};
