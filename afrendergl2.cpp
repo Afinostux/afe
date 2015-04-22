@@ -35,7 +35,7 @@ void afG2DrawModel(afRenderer * self, afModel* model){
 	glColor3f(1.f, 0.f, 1.f);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(4, GL_FLOAT, sizeof(afVertex), &(model->vertices[0].position));
-	for (uint i = 0; i < model->afMeshCount; i++){
+	for (uint i = 0; i < model->meshCount; i++){
 		afMesh * cmesh = &model->meshes[i];
 		glDrawElements(GL_TRIANGLES, cmesh->indexCount, GL_UNSIGNED_INT, (unsigned int*)cmesh->indices);
 	}

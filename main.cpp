@@ -42,7 +42,7 @@ int main (const int argc, const char ** argv)
 		return 1;
 	}
 
-	afModel * cuber = afLoadIQE("wiggler.iqe");
+	afModel * cuber = afLoadIQE("cube.iqe");
 
 	afR = createRendererG2(afPrimaryGlContext);
 	afRInit(window);
