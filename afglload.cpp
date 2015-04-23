@@ -2,7 +2,7 @@
 #include "afglload.hpp"
 #include <signal.h>
 static bool afGLIsInit = false;
-
+#if 1
 //vbo
 glGenBuffersFunc		glGenBuffers=0;
 glBindBufferFunc		glBindBuffer=0;
@@ -30,6 +30,35 @@ glIsProgramFunc			glIsProgram=0;
 glGetProgramInfoLogFunc		glGetProgramInfoLog=0;
 glDeleteProgramFunc		glDeleteProgram=0;
 glGetActiveAttribFunc glGetActiveAttrib=0;
+#else
+//vbo
+glGenBuffersFunc		glGenBuffers;
+glBindBufferFunc		glBindBuffer;
+glBufferDataFunc		glBufferData;
+glDeleteBuffersFunc		glDeleteBuffers;
+//shaders
+glCreateShaderFunc		glCreateShader;
+glShaderSourceFunc		glShaderSource;
+glCompileShaderFunc		glCompileShader;
+glGetShaderivFunc		glGetShaderiv;
+glIsShaderFunc			glIsShader;
+glGetShaderInfoLogFunc		glGetShaderInfoLog;
+glDeleteShaderFunc		glDeleteShader;
+glGetAttribLocationFunc 	glGetAttribLocation;
+glEnableVertexAttribArrayFunc 	glEnableVertexAttribArray;
+glVertexAttribPointerFunc 	glVertexAttribPointer;
+glDisableVertexAttribArrayFunc 	glDisableVertexAttribArray;
+//programs
+glCreateProgramFunc		glCreateProgram;
+glAttachShaderFunc		glAttachShader;
+glLinkProgramFunc		glLinkProgram;
+glGetProgramivFunc		glGetProgramiv;
+glUseProgramFunc		glUseProgram;
+glIsProgramFunc			glIsProgram;
+glGetProgramInfoLogFunc		glGetProgramInfoLog;
+glDeleteProgramFunc		glDeleteProgram;
+glGetActiveAttribFunc glGetActiveAttrib;
+#endif
 
 void afLoadGL()
 {

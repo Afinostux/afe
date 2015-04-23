@@ -15,7 +15,10 @@ typedef struct hc4 {
 		x(x), y(y), z(z),w(w) {}
 	//utility
 	float len();
+	float len4D();
+	hc4 normalized4D();
 	hc4 normalized();
+	void normalize4D();
 	void normalize();
 	hc4 vectorPart();
 	float scalarPart();

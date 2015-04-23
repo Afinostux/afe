@@ -18,7 +18,7 @@ for s in $INCLUDEDIRS; do flags="$flags -I$s"; done
 for file in $SOURCES 
 do 
 	oname=${file%.*}.o
-	echo clang $flags $file -c
+	#echo clang $flags $file -c
 	clang $flags $file -c
 	OBJECTS="$OBJECTS $oname"
 done
@@ -34,6 +34,6 @@ done
 for d in $LIBDIRS; do flags="$flags -L$d"; done
 for l in $LIBS; do flags="$flags -l$l"; done
 
-echo clang $flags $OBJECTS -o space.out
+#echo clang $flags $OBJECTS -o space.out
 clang $flags $OBJECTS -o space.out
 rm $OBJECTS
