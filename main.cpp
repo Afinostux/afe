@@ -10,6 +10,19 @@
 #include "afiqe.hpp"
 #include "afrendergl2.hpp"
 
+//I was always told not to do this,
+//but goddamn if it doesn't make the compile time own bwns
+#include "afglload.cpp"
+#include "afgl.cpp"
+#include "af3dmath.cpp"
+#include "afaudio.cpp"
+#include "afcstrings.cpp"
+#include "afiqe.cpp"
+#include "afkeys.cpp"
+#include "afmath.cpp"
+#include "afrenderi.cpp"
+#include "afrendergl2.cpp"
+
 
 const uint afFrameTargetMS = 5;
 bool running = true;
