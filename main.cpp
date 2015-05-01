@@ -73,6 +73,8 @@ int main (const int argc, const char ** argv)
 
 	float rotationphase = 0.f;
 
+	afQuat junkQuat;
+
 	while (running) {
 		frame_start_perf = SDL_GetPerformanceCounter();
 		last_tick = current_tick;
@@ -94,10 +96,17 @@ int main (const int argc, const char ** argv)
 		if (gkey->pressed) running = false;
 		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0, 0.1, 261.6, 0.01);
 
+#if 0
 		junk = afMat4::identity;
 		junk.rotate(rotationphase/100, rotationphase/10, 0);
 		junk.translate( sin(rotationphase/10),cos(rotationphase/10), -10);
 		//junk.translate(sin(rotationphase/1000) * 10, sin(rotationphase/100) * 10, sin(rotationphase/10) * 10);
+#else
+		junkQuat = {0, 0, 0, 1};
+		junkQuat = junkQuat.rotateByEuler( rotationphase/100, rotationphase/10, 0);
+		junk = junkQuat.toMatrix();
+		junk.translate( sin(rotationphase/10),cos(rotationphase/10), -10);
+#endif
 		rotationphase += 1;
 
 

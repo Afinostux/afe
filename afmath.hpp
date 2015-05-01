@@ -8,3 +8,5 @@ typedef unsigned long ulong;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
 
+float afrsqrt( float x );
+

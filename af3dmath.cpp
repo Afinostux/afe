@@ -423,3 +423,131 @@ mat4& afMat4::operator*=(const mat4& other) {
 	*this = temp;
 	return *this;
 }
+
+//
+//	quat zone
+//
+
+#if 1
+#define renorm(quat) if (!(quat).isNormal()) (quat).normalize();
+#else
+#define renorm(quat)
+#endif
+
+const quat afQuat::identity = {0,0,0,1};
+
+float	afQuat::len(){
+	return sqrt(x*x + y*y + z*z + w*w);
+}
+
+float	afQuat::sqlen(){
+	return (x*x + y*y + z*z + w*w);
+}
+
+int		afQuat::isNormal(){
+	return fabs(sqlen() - 1.0f) < 0.000001;
+}
+
+void	afQuat::normalize(){
+	float l = 1/len();
+	x *= l;
+	y *= l;
+	z *= l;
+	w *= l;
+}
+
+quat	afQuat::normalized(){
+	float l = 1/len();
+	quat result = {x*l, y*l, z*l, w*l};
+	return result;
+}
+
+hc4		afQuat::vectorPart(){
+	return afVec4(x, y, z, 0);
+}
+
+float	afQuat::scalarPart(){
+	return w;
+}
+
+quat	afQuat::rotateByQuat(quat& other){
+	quat result = {
+        w * other.x + x * other.w + y * other.z - z * other.y,
+        w * other.y - x * other.z + y * other.w + z * other.x,
+        w * other.z + x * other.y - y * other.x + z * other.w,
+        w * other.w - x * other.x - y * other.y - z * other.z
+	};
+	renorm(result);
+	return result;
+}
+
+quat	afQuat::rotateByAngleAxis(hc4 other, float radians){
+	hc4 normalized = other.normalized();
+
+	float
+	s = sinf( radians / 2.0f ),
+	c = cosf( radians / 2.0f );
+
+	quat result = {
+		normalized.x * s,
+		normalized.y * s,
+		normalized.z * s,
+		c
+	};
+	renorm(result);
+
+	return this->rotateByQuat(result);
+}
+
+quat	afQuat::rotateByEuler(float p, float y, float r){
+	const hc4
+	axis_r = hc4(0, 0, 1, 0),
+	axis_y = hc4(0, 1, 0, 0),
+	axis_p = hc4(1, 0, 0, 0);
+
+	quat result = this->rotateByAngleAxis(axis_r, r);
+	result = result.rotateByAngleAxis(axis_p, p);
+	return result.rotateByAngleAxis(axis_y, y);
+}
+
+//	0	1	2	3
+//	4	5	6	7
+//	8	9	10	11
+//	12	13	14	15
+mat4	afQuat::toMatrix(){
+	mat4 result = {};
+
+	float xx      = x * x;
+    float xy      = x * y;
+    float xz      = x * z;
+    float xw      = x * w;
+    float yy      = y * y;
+    float yz      = y * z;
+    float yw      = y * w;
+    float zz      = z * z;
+    float zw      = z * w;
+
+    result.m[0]  = 1 - 2 * ( yy + zz );
+    result.m[4]  =     2 * ( xy - zw );
+    result.m[8]  =     2 * ( xz + yw );
+
+    result.m[1]  =     2 * ( xy + zw );
+    result.m[5]  = 1 - 2 * ( xx + zz );
+    result.m[9]  =     2 * ( yz - xw );
+
+    result.m[2]  =     2 * ( xz - yw );
+    result.m[6]  =     2 * ( yz + xw );
+    result.m[10] = 1 - 2 * ( xx + yy );
+
+    result.m[3]  = 0;
+   	result.m[7] = 0;
+   	result.m[11] = 0;
+   	result.m[12] = 0;
+   	result.m[13] = 0;
+   	result.m[14] = 0;
+    result.m[15] = 1;
+
+	return result;
+}
+
+#undef renorm

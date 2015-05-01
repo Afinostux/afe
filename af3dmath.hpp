@@ -15,10 +15,7 @@ typedef struct hc4 {
 		x(x), y(y), z(z),w(w) {}
 	//utility
 	float len();
-	float len4D();
-	hc4 normalized4D();
 	hc4 normalized();
-	void normalize4D();
 	void normalize();
 	hc4 vectorPart();
 	float scalarPart();
@@ -47,8 +44,6 @@ typedef struct hc4 {
 	hc4 operator%(const float other);
 } afVec4;
 
-// also quaternion?
-typedef afVec4 afQuat;
 
 //
 // 	|	Xx	Xy	Xz	0	|
@@ -125,3 +120,19 @@ typedef struct mat4 {
 	}
 } afMat4;
 
+//quat is like a vec4, except that it needs to always be normalized across all 4 axes.
+typedef struct quat {
+	float x, y, z, w;
+	static const quat identity;
+	float len();
+	float sqlen();
+	int isNormal();
+	void normalize();
+	quat normalized();
+	hc4 vectorPart();
+	float scalarPart();
+	quat rotateByQuat(quat& other);
+	quat rotateByAngleAxis(hc4 other, float radians);
+	quat rotateByEuler(float p, float y, float r);
+	mat4 toMatrix();
+} afQuat;
