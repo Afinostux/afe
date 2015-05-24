@@ -8,6 +8,8 @@ afAudioRing afAudioBuffer = {};
 //
 
 
+// TODO(afox): get some better sound synth up in here
+// maybe play midi files? that would be cool
 const uint afSquareMax = 16;
 uint afSquareCount = 0;
 afSquareSynth afASS[afSquareMax];

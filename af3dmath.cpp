@@ -470,7 +470,7 @@ float	afQuat::scalarPart(){
 	return w;
 }
 
-quat	afQuat::rotateByQuat(quat& other){
+quat	afQuat::rotateByQuat(const quat& other){
 	quat result = {
         w * other.x + x * other.w + y * other.z - z * other.y,
         w * other.y - x * other.z + y * other.w + z * other.x,

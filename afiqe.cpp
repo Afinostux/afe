@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <stdlib.h>
-#include "include/SDL_rwops.h"
-#include "include/SDL_timer.h"
+#include "afperf.hpp"
+#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_timer.h"
 
 enum afiqe_vert_attributes {
 	IQEVA_POSITION = 0,
@@ -94,9 +95,10 @@ typedef struct iqeNode {
 	iqeNode* root;
 	uint type;
 	union {
-		/*name points to first char of name in flatly loaded file*/
-		struct {const char name[AFMESH_NAMESIZE];} mesh;
-		struct {} joint;
+		struct {char name[AFMESH_NAMESIZE];} mesh;
+		struct {int parentID; char name[AFBONE_NAMESIZE];} joint;
+		struct {float position[4]; float rotation[4];} pose;
+		struct {struct {int boneID; float weight;} link[4]; int link_count;} weight;
 		float vertexPos[4];
 		float texCoord[2];
 		float normal[3];
@@ -183,7 +185,19 @@ typedef struct iqeNode {
 			while (!isspace(line[++linepos]));
 			result = new iqeNode;
 			result->type = IQE_BONEWEIGHT;
+			int lineTest;
 
+			result->weight.link_count = 0;
+			while ( result->weight.link_count < 4){
+				linepos = afFillBufi(line, linepos, 0, &result->weight.link[result->weight.link_count].boneID, 1);
+				linepos = afFillBuff(line, linepos, 0, &result->weight.link[result->weight.link_count].weight, 1);
+				result->weight.link_count++;
+
+				lineTest = linepos;
+
+				while (line[lineTest] && isspace(line[lineTest])) lineTest++;
+				if (line[lineTest] == 0) break;
+			}
 		} else if (afCstPartMatch(line, "fm ")) {
 			while (!isspace(line[++linepos]));
 			result = new iqeNode;
@@ -194,20 +208,26 @@ typedef struct iqeNode {
 					result->triangle.indices, 3);
 
 		} else if (afCstPartMatch(line, "joint ")) {
-			while (!isspace(line[++linepos]));
 			result = new iqeNode;
 			result->type = IQE_JOINT;
+			linepos = afGetWord(line, result->joint.name, linepos, AFBONE_NAMESIZE);
+			afFillBufi(line, linepos, 0, &result->joint.parentID, 1);
 
 		} else if (afCstPartMatch(line, "mesh ")) {
-			while (!isspace(line[++linepos]));
 			result = new iqeNode;
 			result->type = IQE_MESH;
+			afGetWord(line, result->mesh.name, linepos, AFMESH_NAMESIZE);
 
 		} else if (afCstPartMatch(line, "pq ")) {
 			while (!isspace(line[++linepos]));
 			result = new iqeNode;
 			result->type = IQE_POSE;
-
+			//NOTE(afox): iqe assumes poses are vec3
+			// this is in spite of the fact that positions
+			// are always vec4... cool.
+			result->pose.position[3] = 1;
+			linepos = afFillBuff(line, linepos, 0, result->pose.position, 3);
+			afFillBuff(line, linepos, 0, result->pose.rotation, 4);
 		}
 
 		if (result) {
@@ -217,12 +237,65 @@ typedef struct iqeNode {
 		}
 		return result;
 	}
+
+	void print()
+	{
+		iqeNode *cur = this;
+		while (cur) {
+			printf("(%s)\t", IQEnames[cur->type]);
+			switch (cur->type) {
+				case (IQE_JOINT):
+					printf("%s, %i\n", cur->joint.name, cur->joint.parentID);
+					break;
+				case (IQE_MESH):
+					printf("%s\n", cur->mesh.name);
+					break;
+				case (IQE_MATERIAL):
+					printf("its a material\n");
+					break;
+				case (IQE_VERTEXPOS):
+					printf("%f, %f, %f, %f\n", cur->vertexPos[0],cur->vertexPos[1],cur->vertexPos[2],cur->vertexPos[3]);
+					break;
+				case (IQE_TEXCOORD):
+					printf("%f, %f\n", cur->texCoord[0],cur->texCoord[1]);
+					break;
+				case (IQE_BONEWEIGHT):
+					printf("[%i] ", cur->weight.link_count);
+					for (int i = 0; i < cur->weight.link_count; i++){
+						printf("(%i:%f) ", cur->weight.link[i].boneID, cur->weight.link[i].weight);
+					}
+					printf("\n");
+					break;
+				case (IQE_NORMAL):
+					printf("%f, %f, %f\n", cur->normal[0],cur->normal[1],cur->normal[2]);
+					break;
+				case (IQE_COLOR):
+					printf("%f, %f, %f, %f\n", cur->color[0],cur->color[1],cur->color[2],cur->color[3]);
+					break;
+				case (IQE_CUSTOM):
+					printf("its a custom\n");
+					break;
+				case (IQE_MESHTRIANGLE):
+					printf("its a triangle\n");
+					break;
+				case (IQE_POSE):
+					printf("p: %f, %f, %f, q: %f, %f, %f, %f\n", cur->pose.position[0], cur->pose.position[1], cur->pose.position[2], cur->pose.rotation[0], cur->pose.rotation[1], cur->pose.rotation[2], cur->pose.rotation[3]);
+					break;
+				case (IQE_HEADER):
+					printf("its a header\n");
+					break;
+				case (IQE_TYPE_COUNT):
+					printf("its a problem\n");
+					break;
+			}
+			cur = cur->next;
+		}
+	}
 } iqeNode;
 
 //iqm text format
 #define IQELINESIZE 512
 afModel* afLoadIQE(const char* fname){
-	Uint64 perfstart = SDL_GetPerformanceCounter(), perfend;
 	SDL_RWops * file = SDL_RWFromFile(fname,"r");
 	if (!file) {
 		fprintf(stderr, "error loading %s\n%s\n", fname, SDL_GetError());
@@ -277,48 +350,85 @@ afModel* afLoadIQE(const char* fname){
 
 	}
 
+	iqeNode *curnode;
+	iqeNode *curnode2;
+
 	newmodel->vertexCount = iqeroot.countAstopB(IQE_VERTEXPOS, 0);
 	newmodel->vertices = new afVertex[newmodel->vertexCount];
 	newmodel->meshCount = iqeroot.countAstopB(IQE_MESH, 0);
 	newmodel->meshes = new afMesh[newmodel->meshCount];
+	newmodel->boneCount = iqeroot.countAstopB(IQE_JOINT, 0);
+	newmodel->bones = new afBone[newmodel->boneCount];
 
-	iqeNode *curnode = iqeroot.findNext(IQE_VERTEXPOS);
-	uint vindex = 0;
-	uint i;
-	while (curnode){
+	newmodel->weightCount = 0;
+	for (curnode = iqeroot.findNext(IQE_BONEWEIGHT); curnode;
+			curnode = curnode->findNext(IQE_BONEWEIGHT)){
+		newmodel->weightCount += curnode->weight.link_count;
+	}
+	newmodel->weights = new afVertexWeight[newmodel->weightCount];
+
+	uint vindex = 0, windex = 0;
+	for (curnode = iqeroot.findNext(IQE_VERTEXPOS); curnode;
+			curnode = curnode->findNext(IQE_VERTEXPOS)){
 		newmodel->vertices[vindex].position.x = curnode->vertexPos[0];
 		newmodel->vertices[vindex].position.y = curnode->vertexPos[1];
 		newmodel->vertices[vindex].position.z = curnode->vertexPos[2];
 		newmodel->vertices[vindex].position.w = curnode->vertexPos[3];
-		curnode = curnode->findNext(IQE_VERTEXPOS);
+		for (curnode2 = curnode->findNextStop(IQE_BONEWEIGHT, IQE_VERTEXPOS); curnode2;
+				curnode2 = curnode2->findNextStop(IQE_BONEWEIGHT, IQE_VERTEXPOS)){
+			int n = curnode2->weight.link_count;
+			for (int i = 0; i < n; i++) {
+				newmodel->weights[windex].vertOffset = vindex;
+				newmodel->weights[windex].boneIndex = curnode2->weight.link[i].boneID;
+				newmodel->weights[windex].boneWeight = curnode2->weight.link[i].weight;
+				windex++;
+			}
+		}
 		vindex++;
 	}
 
-	iqeNode *meshnode = iqeroot.findNext(IQE_MESH);
+	uint bindex = 0, pindex;
+	for (curnode = iqeroot.findNext(IQE_JOINT);
+			curnode; curnode = curnode->findNext(IQE_JOINT)) {
+		newmodel->bones[bindex].poseCount = curnode->countAstopB(IQE_POSE, IQE_JOINT);
+		newmodel->bones[bindex].poses = new afPose[newmodel->bones[bindex].poseCount];
+		pindex = 0;
+		for (curnode2 = curnode->findNextStop(IQE_POSE, IQE_JOINT); curnode2;
+				curnode2 = curnode2->findNextStop(IQE_POSE, IQE_JOINT)){
+			newmodel->bones[bindex].poses[pindex].position
+				= V4(curnode2->pose.position);
+			newmodel->bones[bindex].poses[pindex].rotation
+				= QUAT(curnode2->pose.rotation);
+			pindex++;
+		}
+		bindex++;
+	}
+
 	afMesh *curmesh;
 	uint meshindex = 0;
 	uint triindex;
-	while (meshnode) {
+	for (curnode = iqeroot.findNext(IQE_MESH); curnode;
+			curnode = curnode->findNext(IQE_MESH)) {
 		triindex = 0;
 		curmesh = &newmodel->meshes[meshindex];
-		curmesh->indexCount = meshnode->countAstopB(IQE_MESHTRIANGLE, IQE_MESH) * 3;
+		curmesh->indexCount = curnode->countAstopB(IQE_MESHTRIANGLE, IQE_MESH) * 3;
 		curmesh->indices = new int[curmesh->indexCount];
-		curnode = meshnode->findNextStop(IQE_MESHTRIANGLE, IQE_MESH);
-		while (curnode){
-			curmesh->indices[triindex++] = curnode->triangle.indices[0];
-			curmesh->indices[triindex++] = curnode->triangle.indices[1];
-			curmesh->indices[triindex++] = curnode->triangle.indices[2];
-
-			curnode = curnode->findNextStop(IQE_MESHTRIANGLE, IQE_MESH);
+		
+		for (curnode2 = curnode->findNextStop(IQE_MESHTRIANGLE, IQE_MESH); curnode2;
+				curnode2 = curnode2->findNextStop(IQE_MESHTRIANGLE, IQE_MESH)){
+			curmesh->indices[triindex++] = curnode2->triangle.indices[0];
+			curmesh->indices[triindex++] = curnode2->triangle.indices[1];
+			curmesh->indices[triindex++] = curnode2->triangle.indices[2];
 		}
 		
 		meshindex++;
-		meshnode = meshnode->findNext(IQE_MESH);
 	}
 
-	perfend = SDL_GetPerformanceCounter();
-	printf("%lu\n", (perfend - perfstart));
+	
+	//iqeroot.print();
+
 	free(filecont);
+	af_perf_endframe();
 	return newmodel;
 }
 #undef IQELINESIZE

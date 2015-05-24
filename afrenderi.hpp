@@ -1,6 +1,6 @@
 
 #pragma once
-#include "include/SDL_video.h"
+#include "SDL/SDL_video.h"
 #include "afiqe.hpp"
 #include "af3dmath.hpp"
 
@@ -12,40 +12,25 @@ typedef struct afRenderer {
 	void (*endFrame)(afRenderer * self);
 	void (*begin3D)(afRenderer * self);
 	void (*drawModel)(afRenderer * self, afModel*);
+	void (*drawModelSkin)(afRenderer * self, afModel*, afPoseBuffer*);
 	void (*begin2D)(afRenderer * self);
 	afMat4 projection, modelview;
 } afRenderer;
 
 extern afRenderer afR;
 
-inline
-void afRInit(SDL_Window * window){
-	afR.init(&afR, window);
-}
+#define afRInit(window) afR.init(&afR, window);
 
-inline
-void afRBeginFrame(){
-	afR.beginFrame(&afR);
-}
+#define afRBeginFrame() afR.beginFrame(&afR);
 
-inline
-void afREndFrame(){
-	afR.endFrame(&afR);
-}
+#define afREndFrame() afR.endFrame(&afR);
 
-inline
-void afRBegin3D(){
-	afR.begin3D(&afR);
-}
+#define afRBegin3D() afR.begin3D(&afR);
 
-inline
-void afRDrawModel(afModel* model){
-	afR.drawModel(&afR, model);
-}
+#define afRDrawModel(model) afR.drawModel(&afR, model);
 
-inline
-void afRBegin2D(){
-	afR.begin2D(&afR);
-}
+#define afRDrawModelSkin(model, pose_buffer) afR.drawModelSkin(&afR, model, pose_buffer);
+
+#define afRBegin2D() afR.begin2D(&afR);
 
 

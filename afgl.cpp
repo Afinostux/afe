@@ -1,7 +1,7 @@
 
 #include "afgl.hpp"
-#include "include/SDL_video.h"
-#include "include/SDL_rwops.h"
+#include "SDL/SDL_video.h"
+#include "SDL/SDL_rwops.h"
 
 SDL_GLContext afPrimaryGlContext = 0;
 

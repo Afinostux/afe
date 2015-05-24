@@ -1,5 +1,5 @@
 #pragma once
-#include "include/SDL_audio.h"
+#include "SDL/SDL_audio.h"
 
 #define AF_AUDIO_BUFFER_SIZE 8192
 typedef unsigned long int uli;

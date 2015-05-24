@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "include/SDL.h"
-#include "include/SDL_audio.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_audio.h"
 #include "afmath.hpp"
 #include "afgl.hpp"
 #include "afkeys.hpp"
@@ -10,8 +10,7 @@
 #include "afiqe.hpp"
 #include "afrendergl2.hpp"
 
-//I was always told not to do this,
-//but goddamn if it doesn't make the compile time own bwns
+//NOTE(afox): source files go here
 #include "afglload.cpp"
 #include "afgl.cpp"
 #include "af3dmath.cpp"
@@ -55,7 +54,8 @@ int main (const int argc, const char ** argv)
 		return 1;
 	}
 
-	afModel * cuber = afLoadIQE("cube.iqe");
+	afModel * cuber = afLoadIQE("wiggler.iqe");
+	afPoseBuffer pose = cuber->getPoseBuffer();
 
 	afR = createRendererG2(afPrimaryGlContext);
 	afRInit(window);
@@ -80,6 +80,7 @@ int main (const int argc, const char ** argv)
 		last_tick = current_tick;
 		current_tick = SDL_GetTicks();
 		afPushAudio(0.001*(current_tick - last_tick));
+
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -89,12 +90,11 @@ int main (const int argc, const char ** argv)
 				case SDL_KEYUP: {
 							afHandleKeys(&event.key);
 						}
-					       
-
 			}
 		}
+
 		if (gkey->pressed) running = false;
-		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0, 0.1, 261.6, 0.01);
+		if (nkey->pressed && nkey->pressedms == 0) afNewSynthSquare(0, 1, 261.6, 0.01);
 
 #if 0
 		junk = afMat4::identity;
@@ -103,9 +103,20 @@ int main (const int argc, const char ** argv)
 		//junk.translate(sin(rotationphase/1000) * 10, sin(rotationphase/100) * 10, sin(rotationphase/10) * 10);
 #else
 		junkQuat = {0, 0, 0, 1};
-		junkQuat = junkQuat.rotateByEuler( rotationphase/100, rotationphase/10, 0);
+		//junkQuat = junkQuat.rotateByEuler( rotationphase/1000, rotationphase/100, 0);
+		junkQuat = junkQuat.rotateByEuler( 0, 90, 0);
 		junk = junkQuat.toMatrix();
-		junk.translate( sin(rotationphase/10),cos(rotationphase/10), -10);
+		//junk.translate( sin(rotationphase/100),cos(rotationphase/100), -10);
+		junk.translate( 0, 0, -10);
+		if (pose.posecount) {
+			pose.poses[1].rotation = pose.poses[1].rotation.rotateByEuler(0.1, 0, 0);
+			printf("%f %f %f %f\n", 
+					pose.poses[1].rotation.w,
+					pose.poses[1].rotation.x,
+					pose.poses[1].rotation.y,
+					pose.poses[1].rotation.z
+					);
+		}
 #endif
 		rotationphase += 1;
 
@@ -113,7 +124,8 @@ int main (const int argc, const char ** argv)
 		afRBeginFrame();
 		afRBegin3D();
 		glLoadMatrixf(junk.m);
-		afRDrawModel(cuber);
+		afRDrawModelSkin(cuber, &pose);
+		//afRDrawModel(cuber);
 		afREndFrame();
 
 		frame_end_perf = SDL_GetPerformanceCounter();
@@ -140,6 +152,8 @@ int main (const int argc, const char ** argv)
 		}
 		afTickKeys(frametime);
 	};
+
+	pose.clear();
 	glGetFloatv(GL_PROJECTION_MATRIX, junk.m);
 	junk.print();
 

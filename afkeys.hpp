@@ -1,6 +1,6 @@
 
 #pragma once
-#include "include/SDL_events.h"
+#include "SDL/SDL_events.h"
 
 typedef struct afeKey {
 	bool pressed, released;

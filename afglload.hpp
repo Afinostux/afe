@@ -1,10 +1,12 @@
 #pragma once
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "include/SDL_video.h"
+#include "SDL/SDL_video.h"
 //
 //	VBO functions
 //
+// FIXME(afox): why the linker warning spam?
+// is there a better way to load opengl function pointers?
 
 //glGenBuffers
 typedef void (APIENTRY * glGenBuffersFunc)(GLsizei n, GLuint *buffers);

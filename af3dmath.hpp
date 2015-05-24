@@ -44,6 +44,30 @@ typedef struct hc4 {
 	hc4 operator%(const float other);
 } afVec4;
 
+inline
+afVec4
+V4( float x, float y, float z, float w )
+{
+	afVec4 result;
+	result.x = x;
+	result.y = y;
+ 	result.z = z;
+ 	result.w = w;
+	return result;
+}
+
+inline
+afVec4
+V4( float V[4] )
+{
+	afVec4 result;
+	result.x = V[0];
+	result.y = V[1];
+ 	result.z = V[2];
+ 	result.w = V[3];
+	return result;
+}
+
 
 //
 // 	|	Xx	Xy	Xz	0	|
@@ -131,8 +155,64 @@ typedef struct quat {
 	quat normalized();
 	hc4 vectorPart();
 	float scalarPart();
-	quat rotateByQuat(quat& other);
+	quat rotateByQuat(const quat& other);
 	quat rotateByAngleAxis(hc4 other, float radians);
 	quat rotateByEuler(float p, float y, float r);
 	mat4 toMatrix();
+
+	inline
+	afVec4 crossByVector(const afVec4& other) const
+	{
+		afVec4 result;
+		result.x = y * other.z - z * other.y;
+	   	result.y = x * other.z - z * other.x;
+	   	result.z = x * other.y - y * other.x;
+		result.w = 0;
+		return result;
+	}
+
+	inline
+	afVec4 transformVertex(const afVec4& other) const
+	{
+		afVec4 t = crossByVector(other)*2.f;
+		return (t*w) + crossByVector(t) + other;
+	}
+
+	inline
+	quat operator*(const float other)
+	{
+		quat result;
+		result.x = other*x;
+		result.y = other*y;
+		result.z = other*z;
+		result.w = other*w;
+		return result;
+	}
+
+	inline
+	quat& operator*=(const float other)
+	{
+		// TODO(afox): proportional rotation?
+		return *this;
+	}
+
+	inline
+	quat& operator+=(const quat& other)
+	{
+		*this = this->rotateByQuat(other);
+		return *this;
+	}
+
 } afQuat;
+
+inline
+afQuat
+QUAT( float Q[4] )
+{
+	afQuat result;
+	result.x = Q[0];
+	result.y = Q[1];
+	result.z = Q[2];
+	result.w = Q[3];
+	return result;
+}
