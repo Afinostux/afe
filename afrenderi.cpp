@@ -1,4 +1,4 @@
 
 #include "afrenderi.hpp"
 
-afRenderer afR = {};
+afRenderer *afR = 0;

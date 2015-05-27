@@ -9,10 +9,6 @@ typedef struct hc4 {
 	static const hc4 zero;
 	float x, y, z, w;
 
-	hc4(): x(0), y(0), z(0), w(1) {}
-
-	hc4(float x, float y, float z, float w) :
-		x(x), y(y), z(z),w(w) {}
 	//utility
 	float len();
 	hc4 normalized();
@@ -25,17 +21,66 @@ typedef struct hc4 {
 	hc4& operator+=(const hc4& other);
 	hc4& operator+=(const float other);
 	//subtraction
-	hc4 operator-(const hc4& other);
-	hc4 operator-(const float other);
-	hc4& operator-=(const hc4& other);
-	hc4& operator-=(const float other);
+	hc4 operator-(const hc4& other) const{
+		hc4 result = {x - other.x, y - other.y, z - other.z, w - other.w};
+		return result;
+	}
+
+	hc4 operator-(const float other) {
+		hc4 result = {x - other, y - other, z - other, w};
+		return result;
+	}
+	hc4& operator-=(const hc4& other) {
+		x -= other.x;
+		y -= other.y;
+		z -= other.z;
+		w -= other.w;
+		return *this;
+	}
+	hc4& operator-=(const float other) {
+		x -= other;
+		y -= other;
+		z -= other;
+		return *this;
+	}
 	//negation
 	hc4 operator-();
+
 	//multiplication / division
-	hc4 operator*(const float other);
-	hc4 operator/(const float other);
-	hc4& operator*=(const float other);
-	hc4& operator/=(const float other);
+	inline
+	hc4 operator*(const float other) const
+	{
+		hc4 result = {x * other, y * other, z * other, w};
+		return result;
+	}
+
+	inline
+	hc4 operator/(const float other) const
+	{
+		float o = 1.f/other;
+		hc4 result = {x * o, y * o, z * o, w};
+		return result;
+	}
+
+	inline
+	hc4& operator*=(const float other)
+	{
+		x *= other;
+		y *= other;
+		z *= other;
+		return *this;
+	}
+
+	inline
+	hc4& operator/=(const float other)
+	{
+		float o = 1.f/other;
+		x *= o;
+		y *= o;
+		z *= o;
+		return *this;
+	}
+
 	//dot product
 	float operator*(const hc4& other);
 	//cross product
@@ -144,6 +189,13 @@ typedef struct mat4 {
 	}
 } afMat4;
 
+struct quat;
+inline
+afVec4 operator^(const afVec4& a, const quat& b);
+
+inline
+afVec4 operator^(const quat& a, const afVec4& b);
+
 //quat is like a vec4, except that it needs to always be normalized across all 4 axes.
 typedef struct quat {
 	float x, y, z, w;
@@ -155,7 +207,7 @@ typedef struct quat {
 	quat normalized();
 	hc4 vectorPart();
 	float scalarPart();
-	quat rotateByQuat(const quat& other);
+	quat rotateByQuat(const quat& other)const;
 	quat rotateByAngleAxis(hc4 other, float radians);
 	quat rotateByEuler(float p, float y, float r);
 	mat4 toMatrix();
@@ -172,10 +224,14 @@ typedef struct quat {
 	}
 
 	inline
-	afVec4 transformVertex(const afVec4& other) const
+	afVec4 transform(const afVec4& other) const
 	{
+#if 1
 		afVec4 t = crossByVector(other)*2.f;
 		return (t*w) + crossByVector(t) + other;
+#else
+		return (*this)^other^(-(*this));
+#endif
 	}
 
 	inline
@@ -203,7 +259,40 @@ typedef struct quat {
 		return *this;
 	}
 
+	inline
+	quat operator-() const
+	{
+		quat result = {
+			-x, -y, -z, -w
+		};
+		return result;
+	}
+
 } afQuat;
+
+inline
+afVec4 operator^(const afVec4& a, const afQuat& b)
+{
+	afVec4 result = {
+		a.y * b.z - a.z * b.y,
+		a.x * b.z - a.z * b.x,
+ 		a.x * b.y - a.y * b.x,
+ 		0
+	};
+	return result;
+}
+
+inline
+afVec4 operator^(const afQuat& a, const afVec4& b)
+{
+	afVec4 result = {
+		a.y * b.z - a.z * b.y,
+		a.x * b.z - a.z * b.x,
+ 		a.x * b.y - a.y * b.x,
+ 		0
+	};
+	return result;
+}
 
 inline
 afQuat
@@ -216,3 +305,60 @@ QUAT( float Q[4] )
 	result.w = Q[3];
 	return result;
 }
+
+//
+//	coordinate
+//
+typedef struct coord {
+	afVec4 position;
+	afQuat rotation;
+	
+	inline coord localize(const coord& o) const
+	{
+		//TODO(afox): stub
+		return *this;
+	}
+
+	inline coord delocalize(const coord& o) const
+	{
+		//TODO(afox): stub
+		return o;
+	}
+
+	inline afVec4 transform(const afVec4& o) const
+	{
+		afVec4 result = rotation.transform(o);
+		result += position;
+		return result;
+	}
+
+	inline coord operator*(const float o) const
+	{
+		coord result;
+		result.rotation = rotation;
+		result.position = position * o;
+		return result;
+	}
+
+	inline coord& operator*=(const float o)
+	{
+		position = position*o;
+		return *this;
+	}
+
+	inline coord operator+(const coord& o) const
+	{
+		coord result;
+		result.rotation = rotation.rotateByQuat(o.rotation);
+		result.position = o.rotation.transform(position) + o.position;
+		return result;
+	}
+
+	inline coord& operator+=(const coord& o)
+	{
+		rotation = rotation.rotateByQuat(o.rotation);
+		position = o.rotation.transform(position) + o.position;
+		return *this;
+	}
+
+} afCoord;

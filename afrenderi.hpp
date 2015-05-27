@@ -7,30 +7,44 @@
 typedef struct afRenderer {
 	SDL_Window * window;
 	SDL_GLContext context;
-	void (*init)(afRenderer * self, SDL_Window * window);
-	void (*beginFrame)(afRenderer * self);
-	void (*endFrame)(afRenderer * self);
-	void (*begin3D)(afRenderer * self);
-	void (*drawModel)(afRenderer * self, afModel*);
-	void (*drawModelSkin)(afRenderer * self, afModel*, afPoseBuffer*);
-	void (*begin2D)(afRenderer * self);
+	virtual
+	void init(SDL_Window * window)=0;
+
+	virtual
+	void beginFrame()=0;
+
+	virtual
+	void endFrame()=0;
+
+	virtual
+	void begin3D()=0;
+
+	virtual
+	void drawModel(afModel*)=0;
+
+	virtual
+	void drawModelSkin(afModel*, afPoseBuffer*)=0;
+
+	virtual
+	void begin2D()=0;
+
 	afMat4 projection, modelview;
 } afRenderer;
 
-extern afRenderer afR;
+extern afRenderer* afR;
 
-#define afRInit(window) afR.init(&afR, window);
+#define afRInit(window) afR->init(window);
 
-#define afRBeginFrame() afR.beginFrame(&afR);
+#define afRBeginFrame() afR->beginFrame();
 
-#define afREndFrame() afR.endFrame(&afR);
+#define afREndFrame() afR->endFrame();
 
-#define afRBegin3D() afR.begin3D(&afR);
+#define afRBegin3D() afR->begin3D();
 
-#define afRDrawModel(model) afR.drawModel(&afR, model);
+#define afRDrawModel(model) afR->drawModel(model);
 
-#define afRDrawModelSkin(model, pose_buffer) afR.drawModelSkin(&afR, model, pose_buffer);
+#define afRDrawModelSkin(model, pose_buffer) afR->drawModelSkin(model, pose_buffer);
 
-#define afRBegin2D() afR.begin2D(&afR);
+#define afRBegin2D() afR->begin2D();
 
 

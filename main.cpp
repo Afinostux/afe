@@ -13,6 +13,7 @@
 //NOTE(afox): source files go here
 #include "afglload.cpp"
 #include "afgl.cpp"
+// TODO(afox): make 3d math header only
 #include "af3dmath.cpp"
 #include "afaudio.cpp"
 #include "afcstrings.cpp"
@@ -20,7 +21,6 @@
 #include "afkeys.cpp"
 #include "afmath.cpp"
 #include "afrenderi.cpp"
-#include "afrendergl2.cpp"
 
 
 const uint afFrameTargetMS = 5;
@@ -57,7 +57,8 @@ int main (const int argc, const char ** argv)
 	afModel * cuber = afLoadIQE("wiggler.iqe");
 	afPoseBuffer pose = cuber->getPoseBuffer();
 
-	afR = createRendererG2(afPrimaryGlContext);
+	afRendererGL2 renderer = {};
+	afR = &renderer;
 	afRInit(window);
 
 	SDL_Event event;
@@ -109,12 +110,12 @@ int main (const int argc, const char ** argv)
 		//junk.translate( sin(rotationphase/100),cos(rotationphase/100), -10);
 		junk.translate( 0, 0, -10);
 		if (pose.posecount) {
-			pose.poses[1].rotation = pose.poses[1].rotation.rotateByEuler(0.1, 0, 0);
+			pose.poses[1].c.rotation = pose.poses[1].c.rotation.rotateByEuler(0.1, 0, 0);
 			printf("%f %f %f %f\n", 
-					pose.poses[1].rotation.w,
-					pose.poses[1].rotation.x,
-					pose.poses[1].rotation.y,
-					pose.poses[1].rotation.z
+					pose.poses[1].c.rotation.w,
+					pose.poses[1].c.rotation.x,
+					pose.poses[1].c.rotation.y,
+					pose.poses[1].c.rotation.z
 					);
 		}
 #endif

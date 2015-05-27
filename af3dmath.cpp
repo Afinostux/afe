@@ -3,8 +3,8 @@
 //	afVec4 functions
 //
 //utility
-const afVec4 afVec4::identity = afVec4(0,0,0,1);
-const afVec4 afVec4::zero = afVec4(0,0,0,0);
+const afVec4 afVec4::identity = {0,0,0,1};
+const afVec4 afVec4::zero = {0,0,0,0};
 
 float	afVec4::len(){
 	return sqrt(x*x + z*z + y*y);
@@ -12,7 +12,8 @@ float	afVec4::len(){
 
 hc4	afVec4::normalized(){
 	float s = 1/len();
-	return afVec4(x*s, y*s, z*s, w);
+	afVec4 result = {x*s, y*s, z*s, w};
+	return result;
 }
 
 void	afVec4::normalize(){
@@ -23,7 +24,8 @@ void	afVec4::normalize(){
 }
 
 hc4	afVec4::vectorPart(){
-	return hc4(x, y, z, 0);
+	hc4 result = {x, y, z, 0};
+	return result;
 }
 
 float	afVec4::scalarPart(){
@@ -33,18 +35,19 @@ float	afVec4::scalarPart(){
 
 //addition
 hc4	afVec4::operator+(const hc4& other){
-	return afVec4(x + other.x, y + other.y, z + other.z, w + other.w);
+	afVec4 result = {x + other.x, y + other.y, z + other.z, w};
+	return result;
 }
 
 hc4	afVec4::operator+(const float other){
-	return afVec4(x + other, y + other, z + other, w + other);
+	afVec4 result = {x + other, y + other, z + other, w};
+	return result;
 }
 
 hc4&	afVec4::operator+=(const hc4& other){
 	x += other.x;
 	y += other.y;
 	z += other.z;
-	w += other.w;
 	return *this;
 }
 
@@ -55,56 +58,10 @@ hc4&	afVec4::operator+=(const float other){
 	return *this;
 }
 
-//subtraction
-hc4	afVec4::operator-(const hc4& other){
-	return afVec4(x - other.x, y - other.y, z - other.z, w - other.w);
-}
-
-hc4	afVec4::operator-(const float other){
-	return afVec4(x - other, y - other, z - other, w);
-}
-
-hc4&	afVec4::operator-=(const hc4& other){
-	x -= other.x;
-	y -= other.y;
-	z -= other.z;
-	w -= other.w;
-	return *this;
-}
-
-hc4&	afVec4::operator-=(const float other){
-	x -= other;
-	y -= other;
-	z -= other;
-	return *this;
-}
-
 //negation
 hc4	afVec4::operator-(){
-	return afVec4(-x, -y, -z, w);
-}
-
-//multiplication / division
-hc4	afVec4::operator*(const float other){
-	return afVec4(x * other, y * other, z * other, w);
-}
-
-hc4	afVec4::operator/(const float other){
-	return afVec4(x / other, y / other, z / other, w);
-}
-
-hc4&	afVec4::operator*=(const float other){
-	x *= other;
-	y *= other;
-	z *= other;
-	return *this;
-}
-
-hc4&	afVec4::operator/=(const float other){
-	x /= other;
-	y /= other;
-	z /= other;
-	return *this;
+	afVec4 result = {-x, -y, -z, w};
+	return result;
 }
 
 //dotproduct
@@ -114,7 +71,8 @@ float	afVec4::operator*(const hc4& other){
 
 //cross	product
 hc4	afVec4::operator^(const hc4& other){
-	return afVec4(y * other.z - z * other.y, x * other.z - z * other.x, x * other.y - y * other.x, 0);
+	afVec4 result = {y * other.z - z * other.y, x * other.z - z * other.x, x * other.y - y * other.x, 0};
+	return result;
 }
 
 //set	length
@@ -463,14 +421,15 @@ quat	afQuat::normalized(){
 }
 
 hc4		afQuat::vectorPart(){
-	return afVec4(x, y, z, 0);
+	afVec4 result = {x, y, z, 0};
+	return result;
 }
 
 float	afQuat::scalarPart(){
 	return w;
 }
 
-quat	afQuat::rotateByQuat(const quat& other){
+quat	afQuat::rotateByQuat(const quat& other) const{
 	quat result = {
         w * other.x + x * other.w + y * other.z - z * other.y,
         w * other.y - x * other.z + y * other.w + z * other.x,
@@ -501,9 +460,9 @@ quat	afQuat::rotateByAngleAxis(hc4 other, float radians){
 
 quat	afQuat::rotateByEuler(float p, float y, float r){
 	const hc4
-	axis_r = hc4(0, 0, 1, 0),
-	axis_y = hc4(0, 1, 0, 0),
-	axis_p = hc4(1, 0, 0, 0);
+	axis_r = {0, 0, 1, 0},
+	axis_y = {0, 1, 0, 0},
+	axis_p = {1, 0, 0, 0};
 
 	quat result = this->rotateByAngleAxis(axis_r, r);
 	result = result.rotateByAngleAxis(axis_p, p);

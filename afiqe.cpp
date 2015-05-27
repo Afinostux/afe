@@ -395,9 +395,9 @@ afModel* afLoadIQE(const char* fname){
 		pindex = 0;
 		for (curnode2 = curnode->findNextStop(IQE_POSE, IQE_JOINT); curnode2;
 				curnode2 = curnode2->findNextStop(IQE_POSE, IQE_JOINT)){
-			newmodel->bones[bindex].poses[pindex].position
+			newmodel->bones[bindex].poses[pindex].c.position
 				= V4(curnode2->pose.position);
-			newmodel->bones[bindex].poses[pindex].rotation
+			newmodel->bones[bindex].poses[pindex].c.rotation
 				= QUAT(curnode2->pose.rotation);
 			pindex++;
 		}
@@ -425,6 +425,7 @@ afModel* afLoadIQE(const char* fname){
 	}
 
 	
+	newmodel->finish();
 	//iqeroot.print();
 
 	free(filecont);
@@ -436,4 +437,3 @@ afModel* afLoadIQE(const char* fname){
 bool afLoadIQM(const char* fname){
 	return false;
 }
-

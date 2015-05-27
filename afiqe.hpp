@@ -3,41 +3,28 @@
 #include "af3dmath.hpp"
 #include "afcstrings.hpp"
 
-typedef struct afPose {
+typedef struct afVertex {
 	afVec4 position;
-	afQuat rotation;
+	afVec4 color;
+} afVertex;
+
+typedef struct afPose {
+	afCoord c;
 
 	inline
-	afVec4 transformVertex(const afVec4& other)
+	afVec4 transform(const afVec4& o) const
 	{
-		afVec4 result = rotation.transformVertex(other);
-		if (other.w != 0) result = result + position;
+		afVec4 result;
+		result = o - c.position;
+		result = c.transform(result);
 		return result;
 	}
 
 	inline
-	afPose operator*(const float other)
+	void invert()
 	{
-		afPose result;
-		result.position = position*other;
-		result.rotation = rotation*other;
-		return result;
-	}
-
-	inline
-	afPose& operator+=(const afPose& other)
-	{
-		position += other.position;
-		rotation += other.rotation;
-		return *this;
-	}
-
-	inline
-	afPose& operator*=(const float other)
-	{
-		position *= other;
-		rotation *= other;
-		return *this;
+		c.position = -c.position;
+		c.rotation = -c.rotation;
 	}
 } afPose;
 
@@ -54,11 +41,6 @@ typedef struct afVertexWeight {
 	float boneWeight;
 	int boneIndex;
 } afVertexWeight;
-
-typedef struct afVertex {
-	afVec4 position;
-	afVec4 color;
-} afVertex;
 
 #define AFMESH_NAMESIZE 16
 typedef struct afMesh {
@@ -108,15 +90,39 @@ typedef struct afModel {
 
 	inline
 	void
+	transformPoseBuffer(afPoseBuffer* buf) {
+		for (int i = 1; i < boneCount; i++) {
+			buf->poses[i].c = buf->poses[i].c + buf->poses[bones[i].parentID].c;
+		}
+	}
+
+	inline
+	void
 	finish() {
 		if (finished) return;
-		for (int i = 0; i < vertexCount; i++) {
-			vertices[i].position;
+		finished = true;
+
+#if 0
+		if (boneCount) {
+			afPoseBuffer p = getPoseBuffer();
+			for (int i = 0; i < p.posecount; i++) {
+				p.poses[i].invert();
+			}
+			transformPoseBuffer(&p);
+			int WI = 0;
+			for (int i = 0; i < vertexCount; i++) {
+				float accum = 0;
+				afVec4 mix = {};
+				for (; WI < weightCount && weights[WI].vertOffset == i; WI++) {
+					mix += bones[weights[WI].boneIndex].poses[0].transform(vertices[i].position) * weights[WI].boneWeight;
+					accum += weights[WI].boneWeight;
+				}
+				vertices[i].position = mix/accum;
+			}
 		}
+#endif
 	}
 } afModel;
 
 afModel* afGetModel(const char* modelname);
 
-afModel* afLoadIQE(const char* fname);
-bool afLoadIQM(const char* fname);
